@@ -36,11 +36,25 @@ def validate(data):
         status = e.get("evidence_status", "unknown")
         if status not in STATUSES: errors.append(f"Connection {e.get('id')}: invalid evidence_status {status}")
         if status != "confirmed": warnings.append(f"Connection {e.get('id')} is {status}; label it clearly in diagrams.")
+    # Text that will not fit the diagram.
+    for c in components:
+        if isinstance(c, dict):
+            if len(str(c.get("name", ""))) > 40: warnings.append(f"Component {c.get('id')}: name is over 40 characters and will be cut short in the diagram.")
+            if len(str(c.get("description", ""))) > 90: warnings.append(f"Component {c.get('id')}: description is over 90 characters and will be cut short in the diagram.")
+    by_conn = {e.get("id"): e for e in connections if isinstance(e, dict)}
+    for e in by_conn.values():
+        if len(str(e.get("label", ""))) > 45: warnings.append(f"Connection {e.get('id')}: label is over 45 characters and will be cut short on the arrow.")
+        if e.get("from") and e.get("from") == e.get("to"): warnings.append(f"Connection {e.get('id')} links {e.get('from')} to itself and will not be drawn.")
     for d in data.get("diagrams", []) or []:
+        shown = set(d.get("component_ids", []))
         for cid in d.get("component_ids", []):
             if cid not in known: errors.append(f"Diagram {d.get('id')} references unknown component {cid}")
         for eid in d.get("connection_ids", []):
-            if eid not in set(conn_ids): errors.append(f"Diagram {d.get('id')} references unknown connection {eid}")
+            if eid not in by_conn: errors.append(f"Diagram {d.get('id')} references unknown connection {eid}"); continue
+            e = by_conn[eid]
+            if e.get("from") not in shown or e.get("to") not in shown:
+                warnings.append(f"Diagram {d.get('id')}: connection {eid} will not be drawn because one of its ends is not in this diagram.")
+        if len(shown) > 8: warnings.append(f"Diagram {d.get('id')} has {len(shown)} components; more than 8 gets crowded, consider splitting it.")
     if not data.get("diagrams"): warnings.append("No diagrams declared; generator will create a default overview.")
     return errors, warnings
 

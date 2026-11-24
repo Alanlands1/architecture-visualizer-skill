@@ -1,14 +1,22 @@
 # GitLab Duo Architecture Visualizer
 
-A project-level GitLab Duo Agent Skill that converts architecture write-ups into a shared JSON model and synchronized enterprise deliverables.
+A project-level GitLab Duo Agent Skill. Describe a system in plain English ("shoppers use the website, it talks to our backend, the backend saves orders and asks Stripe to take payment") and it draws the architecture diagrams for you. Written documents (PDF, DOCX, PPTX, Markdown, text) work too.
+
+Everything is generated from one shared JSON model, so all the files below always show the same picture.
+
+## Example
+
+`examples/online-bookstore/` holds a complete run: the plain-English input in `description.md`, and every generated file in `output/`. Start with the pictures in `output/diagrams/`.
 
 ## Outputs
 
-- **PPTX**: native editable PowerPoint shapes, labels, containers, and connectors (primary output).
-- **Draw.io**: editable diagrams.net XML.
-- **DOCX**: editable architecture document with text, tables, and embedded diagram preview.
-- **JSON**: normalized architecture model used by every renderer.
-- **SVG**: scalable vector overview.
+- **PPTX**: one slide per diagram, built from native editable shapes, arrows, and labels (primary output).
+- **Draw.io**: one page per diagram, editable in diagrams.net.
+- **DOCX**: a written document with every diagram, its numbered steps, and tables of parts and links.
+- **PNG and SVG**: one picture per diagram in `diagrams/`.
+- **JSON**: the architecture model used by every renderer.
+
+Diagrams are laid out automatically, left to right along the arrows. Databases are drawn as cylinders and people as rounded pills. Each arrow carries its step number and label; dashed arrows are messages, events, files, or scheduled jobs. An amber border marks a part that was inferred, not stated.
 
 ## Install in a repository
 
@@ -34,13 +42,14 @@ Python 3.10+ recommended.
 python -m pip install -r requirements.txt
 ```
 
-`python-pptx` and `python-docx` create the editable Office deliverables. The Draw.io XML and SVG generators use the Python standard library. `pypdf` and `python-pptx` are used by the optional write-up extraction utility.
+`python-pptx` and `python-docx` create the editable Office deliverables, and `Pillow` draws the PNG pictures that go into the Word document. The Draw.io and SVG generators use the Python standard library. `pypdf` is used by the optional text extraction helper.
 
 ## Generate from a normalized model
 
 ```bash
 python scripts/validate_model.py examples/architecture.example.json
 python scripts/generate.py examples/architecture.example.json --out-dir output
+python scripts/generate.py examples/online-bookstore/output/architecture.json --out-dir my-bookstore-output
 ```
 
 ## Convert source documents to text (optional helper)
@@ -59,4 +68,4 @@ See `schemas/architecture.schema.json` and `examples/architecture.example.json`.
 
 ## Important editability distinction
 
-PowerPoint and Draw.io are generated as native editable diagram elements. Word content is editable; the overview diagram is embedded as SVG for scalable rendering, not promised as individual Word drawing shapes. Use the PPTX or Draw.io file when editing individual diagram elements.
+PowerPoint and Draw.io are generated as native editable diagram elements. In Word the text and tables are editable, but each diagram is a picture. Use the PPTX or Draw.io file when editing individual diagram elements.

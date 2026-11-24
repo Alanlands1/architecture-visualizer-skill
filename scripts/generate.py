@@ -1,208 +1,703 @@
 #!/usr/bin/env python3
-"""Generate editable PPTX, Draw.io XML, DOCX and SVG from one architecture JSON model."""
-import argparse, json, math, html, re
+"""Generate editable PPTX, Draw.io, DOCX, SVG and PNG deliverables from one architecture JSON model.
+
+Every diagram view is laid out once (left to right, following the arrows) and the same
+layout is then drawn by each output format, so all files show the same picture.
+"""
+import argparse, html, json, re, sys, textwrap
 from pathlib import Path
-from xml.etree.ElementTree import Element, SubElement, ElementTree, tostring
+from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.dom import minidom
 
-from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.dml.color import RGBColor
-from docx import Document
-from docx.shared import Inches as DocInches, Pt as DocPt, RGBColor as DocRGB
+NAVY = "#183153"; BLUE = "#3069A4"; GREY = "#526579"; TEXT = "#34495E"
+CANVAS = "#F7F9FB"; WHITE = "#FFFFFF"; AMBER = "#B56F1C"; RED = "#AA4141"
+TYPE_FILL = {"user_interface": "#E8F1FB", "application": "#E8F1FB", "service": "#E6F4F1",
+             "database": "#FFF3DF", "external": "#F0ECF8", "queue": "#FCEBEC", "actor": "#F2F4F7"}
+DEFAULT_FILL = "#EAF0F6"
+STATUS_BORDER = {"confirmed": BLUE, "inferred": AMBER, "unknown": RED}
+# Interactions the sender does not wait for are drawn dashed.
+DASHED_KINDS = {"asynchronous", "event", "batch", "file_transfer"}
+LEGEND = ("Border: blue = stated, amber = inferred, red = unknown   |   "
+          "Solid arrow = direct request or data access   |   "
+          "Dashed arrow = message, event, file or scheduled job")
 
-NAVY = RGBColor(24, 49, 83); BLUE = RGBColor(48, 105, 164); TEAL = RGBColor(25, 130, 130)
-PALE = RGBColor(235, 242, 248); LIGHT = RGBColor(247, 249, 251); GREY = RGBColor(92, 107, 122)
-WHITE = RGBColor(255,255,255); AMBER = RGBColor(181, 111, 28); RED = RGBColor(170, 65, 65)
-TYPE_COLORS = {"user_interface": "#E8F1FB", "application": "#E8F1FB", "service": "#E6F4F1", "database": "#FFF3DF", "external": "#F0ECF8", "queue": "#FCEBEC", "actor": "#F2F4F7"}
+# Layout sizes in drawing units. 100 units = 1 inch in PowerPoint.
+BOX_W, BOX_H, GAP_X, GAP_Y, LANE_H, MARGIN = 224, 118, 172, 34, 26, 28
+LABEL_CHARS = 19  # label lines stay narrower than the gap, so the arrow shows on both sides
+HEADER_H, FOOTER_H = 58, 34
 
-def clean(s): return re.sub(r"\s+", " ", str(s or "")).strip()
+
+def clean(s):
+    return re.sub(r"\s+", " ", str(s or "")).strip()
+
+
+def status_of(obj):
+    st = obj.get("evidence_status", "unknown")
+    return st if st in STATUS_BORDER else "unknown"
+
+
 def status_label(obj):
-    st=obj.get("evidence_status", "unknown")
+    st = status_of(obj)
     return "" if st == "confirmed" else f" [{st.upper()}]"
+
+
+def type_label(comp):
+    return clean(comp.get("type") or "component").replace("_", " ").title()
+
+
+def wrap(text, width, max_lines):
+    width = max(4, int(width))
+    lines = textwrap.wrap(clean(text), width) or []
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        last = lines[-1] if len(lines[-1]) < width else lines[-1][:width - 1].rstrip()
+        lines[-1] = last + "…"
+    return lines
+
+
 def load_views(model):
-    comps={c['id']:c for c in model.get('components',[])}; conns={e['id']:e for e in model.get('connections',[])}
-    views=model.get('diagrams') or [{"id":"overview","title":model.get('title','Architecture Overview'),"type":"overview","component_ids":list(comps),"connection_ids":list(conns)}]
-    out=[]
+    comps = {c["id"]: c for c in model.get("components", [])}
+    conns = {e["id"]: e for e in model.get("connections", [])}
+    views = model.get("diagrams") or [{"id": "overview", "title": model.get("title", "Architecture Overview"),
+                                       "type": "overview", "component_ids": list(comps), "connection_ids": list(conns)}]
+    out = []
     for v in views:
-        cids=v.get('component_ids') or list(comps); eids=v.get('connection_ids') or list(conns)
-        out.append((v,[comps[x] for x in cids if x in comps],[conns[x] for x in eids if x in conns]))
+        cids = v.get("component_ids") or list(comps)
+        eids = v.get("connection_ids") or list(conns)
+        out.append((v, [comps[x] for x in cids if x in comps], [conns[x] for x in eids if x in conns]))
     return out
 
-def positions(n):
-    # Horizontal swimlane-like layout, wrapping to two rows for larger views.
-    cols=min(4,max(1,n)); rows=math.ceil(n/cols); pos={}
-    for i in range(n): pos[i]=(i%cols, i//cols)
-    return pos,cols,rows
 
-def svg_for_view(title, comps, conns, width=1200, height=650):
-    margin=70; cols=min(4,max(1,len(comps))); rows=max(1,math.ceil(len(comps)/cols))
-    bw=min(230,(width-2*margin-(cols-1)*55)/cols); bh=112
-    gapx=(width-2*margin-cols*bw)/(max(1,cols-1)) if cols>1 else 0
-    gapy=110; total_h=margin*2+rows*bh+(rows-1)*gapy
-    height=max(height,total_h)
-    pos={c['id']:(margin+(i%cols)*(bw+gapx), margin+(i//cols)*(bh+gapy)) for i,c in enumerate(comps)}
-    s=[f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-       '<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#526579"/></marker></defs>',
-       f'<rect width="100%" height="100%" fill="#F7F9FB"/>',f'<text x="{margin}" y="38" font-family="Aptos,Arial" font-size="24" font-weight="700" fill="#183153">{html.escape(title)}</text>']
-    for e in conns:
-        if e.get('from') not in pos or e.get('to') not in pos: continue
-        x1,y1=pos[e['from']]; x2,y2=pos[e['to']]
-        x1+=bw; y1+=bh/2; x2-=8; y2+=bh/2
-        if x2 < x1: x1-=bw; x2+=bw+16
-        s.append(f'<path d="M{x1},{y1} C{(x1+x2)/2},{y1} {(x1+x2)/2},{y2} {x2},{y2}" fill="none" stroke="#526579" stroke-width="2.2" marker-end="url(#arr)"/>')
-        lx=(x1+x2)/2; ly=(y1+y2)/2-9
-        edge_no = conns.index(e) + 1
-        s.append(f'<circle cx="{lx}" cy="{ly}" r="12" fill="#FFFFFF" stroke="#526579" stroke-width="1.5"/>')
-        s.append(f'<text x="{lx}" y="{ly+4}" text-anchor="middle" font-family="Aptos,Arial" font-size="11" font-weight="700" fill="#183153">{edge_no}</text>')
+# --------------------------------------------------------------------------- layout
+
+def build_scene(comps, conns):
+    """Place boxes in columns that follow the arrows, and route every arrow between them."""
+    ids = [c["id"] for c in comps]
+    idset = set(ids)
+    edges = [e for e in conns if e.get("from") in idset and e.get("to") in idset and e["from"] != e["to"]]
+
+    # 1. Arrows that close a loop are laid out backwards, then drawn pointing the right way.
+    out = {i: [] for i in ids}
+    for k, e in enumerate(edges):
+        out[e["from"]].append(k)
+    state, flipped = {}, set()
+
+    def visit(u):
+        state[u] = 1
+        for k in out[u]:
+            v = edges[k]["to"]
+            if state.get(v) == 1:
+                flipped.add(k)
+            elif v not in state:
+                visit(v)
+        state[u] = 2
+
+    for i in ids:
+        if i not in state:
+            visit(i)
+    pairs = [(e["to"], e["from"]) if k in flipped else (e["from"], e["to"]) for k, e in enumerate(edges)]
+
+    # 2. Column of each box = longest chain of arrows leading to it.
+    col = {i: 0 for i in ids}
+    for _ in ids:
+        changed = False
+        for u, v in pairs:
+            if col[v] < col[u] + 1:
+                col[v] = col[u] + 1
+                changed = True
+        if not changed:
+            break
+    succ = {i: [] for i in ids}
+    pred = {i: [] for i in ids}
+    for u, v in pairs:
+        succ[u].append(v)
+        pred[v].append(u)
+    for i in ids:  # a box nothing points to sits right before what it points to
+        if not pred[i] and succ[i]:
+            col[i] = min(col[v] for v in succ[i]) - 1
+    used = sorted(set(col.values()))
+    col = {i: used.index(c) for i, c in col.items()}
+    n_cols = len(used) or 1
+
+    # 3. Arrows that skip columns get a lane of their own in each column they pass.
+    cols = [[] for _ in range(n_cols)]
+    for i in ids:
+        cols[col[i]].append(i)
+    chains = []
+    for k, (u, v) in enumerate(pairs):
+        chain = [u]
+        for c in range(col[u] + 1, col[v]):
+            lane = ("lane", k, c)
+            cols[c].append(lane)
+            chain.append(lane)
+        chain.append(v)
+        chains.append(chain)
+
+    # 4. Order each column so arrows cross as little as possible.
+    before, after = {}, {}
+    for chain in chains:
+        for a, b in zip(chain, chain[1:]):
+            after.setdefault(a, []).append(b)
+            before.setdefault(b, []).append(a)
+    for sweep in range(6):
+        forward = sweep % 2 == 0
+        for c in (range(1, n_cols) if forward else range(n_cols - 2, -1, -1)):
+            ref = {n: i for i, n in enumerate(cols[c - 1] if forward else cols[c + 1])}
+            cur = {n: i for i, n in enumerate(cols[c])}
+            near = before if forward else after
+
+            def weight(n):
+                at = [ref[m] for m in near.get(n, []) if m in ref]
+                return (sum(at) / len(at) if at else cur[n], cur[n])
+
+            cols[c].sort(key=weight)
+
+    # 5. Coordinates.
+    def height(n):
+        return LANE_H if isinstance(n, tuple) else BOX_H
+
+    col_h = [sum(height(n) for n in c) + GAP_Y * (len(c) - 1) for c in cols]
+    inner_h = max(col_h + [BOX_H])
+    width = 2 * MARGIN + n_cols * BOX_W + (n_cols - 1) * GAP_X
+    total_h = 2 * MARGIN + inner_h
+    pos = {}
+    for c, members in enumerate(cols):
+        x = MARGIN + c * (BOX_W + GAP_X)
+        y = MARGIN + (inner_h - col_h[c]) / 2
+        for n in members:
+            pos[n] = (x, y, height(n))
+            y += height(n) + GAP_Y
+
+    def mid_y(n):
+        return pos[n][1] + pos[n][2] / 2
+
+    # 6. Spread arrows along the side of a box so they do not sit on top of each other.
+    leaving, entering = {}, {}
+    for k, chain in enumerate(chains):
+        leaving.setdefault(chain[0], []).append(k)
+        entering.setdefault(chain[-1], []).append(k)
+    port = {}
+    for side, table, other in (("out", leaving, 1), ("in", entering, -2)):
+        for n, ks in table.items():
+            ks.sort(key=lambda k: mid_y(chains[k][other]))
+            for j, k in enumerate(ks):
+                frac = 0.5 if len(ks) == 1 else 0.22 + 0.56 * j / (len(ks) - 1)
+                port[(side, k)] = frac
+
+    boxes = []
     for c in comps:
-        if c['id'] not in pos: continue
-        x,y=pos[c['id']]; fill=TYPE_COLORS.get(c.get('type'), '#EAF0F6')
-        st=c.get('evidence_status','unknown'); border={'confirmed':'#3069A4','inferred':'#B56F1C','unknown':'#AA4141'}.get(st,'#3069A4')
-        name=html.escape(clean(c.get('name'))); typ=html.escape(clean(c.get('type','component')).replace('_',' ').title())
-        desc=html.escape(clean(c.get('description'))[:75])
-        s.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="12" fill="{fill}" stroke="{border}" stroke-width="2"/>')
-        s.append(f'<text x="{x+14}" y="{y+30}" font-family="Aptos,Arial" font-size="17" font-weight="700" fill="#183153">{name}</text>')
-        s.append(f'<text x="{x+14}" y="{y+53}" font-family="Aptos,Arial" font-size="12" fill="#526579">{typ}{" · "+st.upper() if st!="confirmed" else ""}</text>')
-        s.append(f'<text x="{x+14}" y="{y+77}" font-family="Aptos,Arial" font-size="11" fill="#34495E">{desc}</text>')
-    key_y = margin + rows * bh + (rows-1) * gapy + 45
-    if conns:
-        s.append(f'<text x="{margin}" y="{key_y}" font-family="Aptos,Arial" font-size="14" font-weight="700" fill="#183153">Connection key</text>')
-        for j,e in enumerate(conns):
-            s.append(f'<text x="{margin}" y="{key_y+24+j*22}" font-family="Aptos,Arial" font-size="12" fill="#34495E">{j+1}. {html.escape(clean(e.get("label")))} — {html.escape(clean(e.get("from")))} → {html.escape(clean(e.get("to")))}</text>')
-    s.append('</svg>'); return '\n'.join(s)
+        x, y, _ = pos[c["id"]]
+        long_name = len(clean(c.get("name"))) > 23
+        name_lines = wrap(c.get("name"), 26 if long_name else 23, 2 if long_name else 1)
+        shape = {"database": "cylinder", "actor": "pill"}.get(c.get("type"), "box")
+        desc_lines = wrap(c.get("description"), 33, 2 if (len(name_lines) > 1 or shape == "cylinder") else 3)
+        st = status_of(c)
+        boxes.append({"id": c["id"], "x": x, "y": y, "w": BOX_W, "h": BOX_H, "shape": shape,
+                      "fill": TYPE_FILL.get(c.get("type"), DEFAULT_FILL), "border": STATUS_BORDER[st],
+                      "name": clean(c.get("name")), "name_lines": name_lines, "name_size": 13 if long_name else 15,
+                      "type_line": type_label(c) + ("" if st == "confirmed" else " · " + st.upper()),
+                      "desc": clean(c.get("description")), "desc_lines": desc_lines, "tag": status_label(c)})
 
-def make_pptx(model, views, path):
-    prs=Presentation(); prs.slide_width= Inches(13.333); prs.slide_height= Inches(7.5)
-    blank=prs.slide_layouts[6]
-    # Cover slide
-    slide=prs.slides.add_slide(blank); bg=slide.background.fill; bg.solid(); bg.fore_color.rgb=LIGHT
-    sh=slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width, Inches(1.05)); sh.fill.solid(); sh.fill.fore_color.rgb=NAVY; sh.line.fill.background()
-    tb=slide.shapes.add_textbox(Inches(.65), Inches(1.75), Inches(12), Inches(1.2)); tf=tb.text_frame; tf.text=model.get('title','Architecture Overview'); tf.paragraphs[0].font.size=Pt(30); tf.paragraphs[0].font.bold=True; tf.paragraphs[0].font.color.rgb=NAVY
-    st=slide.shapes.add_textbox(Inches(.68), Inches(2.85), Inches(11.8), Inches(.65)); p=st.text_frame.paragraphs[0]; p.text=model.get('subtitle','Enterprise Architecture'); p.font.size=Pt(17); p.font.color.rgb=GREY
-    sm=slide.shapes.add_textbox(Inches(.68), Inches(4.0), Inches(11.7), Inches(1.3)); p=sm.text_frame.paragraphs[0]; p.text=model.get('summary','Architecture visualized from supplied written material.'); p.font.size=Pt(16); p.font.color.rgb=NAVY
-    foot=slide.shapes.add_textbox(Inches(.68), Inches(6.85), Inches(11.8), Inches(.3)); p=foot.text_frame.paragraphs[0]; p.text='Generated from a shared architecture model · Editable native PowerPoint elements'; p.font.size=Pt(9); p.font.color.rgb=GREY
-    for view, comps, conns in views:
-        slide=prs.slides.add_slide(blank); slide.background.fill.solid(); slide.background.fill.fore_color.rgb=LIGHT
-        title=slide.shapes.add_textbox(Inches(.45), Inches(.22), Inches(12.3), Inches(.55)); p=title.text_frame.paragraphs[0]; p.text=view.get('title','Architecture view'); p.font.size=Pt(23); p.font.bold=True; p.font.color.rgb=NAVY
-        # diagram bounds
-        left,top=Inches(.65),Inches(1.25); area_w=Inches(12.0); area_h=Inches(5.25)
-        n=max(1,len(comps)); cols=min(4,n); rows=math.ceil(n/cols)
-        box_w=min(Inches(2.65), int((area_w-Inches(.45)*(cols-1))/cols)); box_h=Inches(1.05)
-        gap_x=(area_w-cols*box_w)/(cols-1) if cols>1 else 0; gap_y=Inches(.8)
-        loc={}
-        for i,c in enumerate(comps):
-            col,row=i%cols,i//cols; x=int(left+col*(box_w+gap_x)); y=int(top+row*(box_h+gap_y)); loc[c['id']]=(x,y)
-        # Connectors first, so shapes sit on top
-        for e in conns:
-            if e.get('from') not in loc or e.get('to') not in loc: continue
-            x1,y1=loc[e['from']]; x2,y2=loc[e['to']]
-            start=(x1+box_w,y1+box_h//2); end=(x2,y2+box_h//2)
-            if end[0] < start[0]: start=(x1,y1+box_h//2); end=(x2+box_w,y2+box_h//2)
-            line=slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT,start[0],start[1],end[0],end[1]); line.line.color.rgb=GREY; line.line.width=Pt(1.8); line.line.end_arrowhead=True
-            mx=(start[0]+end[0])//2; my=(start[1]+end[1])//2-Inches(.12)
-            edge_no=conns.index(e)+1
-            marker=slide.shapes.add_shape(MSO_SHAPE.OVAL,mx-Inches(.12),my-Inches(.12),Inches(.24),Inches(.24))
-            marker.fill.solid(); marker.fill.fore_color.rgb=WHITE; marker.line.color.rgb=GREY; marker.line.width=Pt(1)
-            mt=marker.text_frame; mt.clear(); mt.vertical_anchor=MSO_ANCHOR.MIDDLE; mt.paragraphs[0].text=str(edge_no); mt.paragraphs[0].font.size=Pt(8); mt.paragraphs[0].font.bold=True; mt.paragraphs[0].font.color.rgb=NAVY; mt.paragraphs[0].alignment=PP_ALIGN.CENTER
-        for c in comps:
-            if c['id'] not in loc: continue
-            x,y=loc[c['id']]; shape=slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,x,y,box_w,box_h)
-            shape.fill.solid(); shape.fill.fore_color.rgb={'database':RGBColor(255,243,223),'service':RGBColor(230,244,241),'external':RGBColor(240,236,248),'queue':RGBColor(252,235,236)}.get(c.get('type'),PALE)
-            status=c.get('evidence_status','unknown'); shape.line.color.rgb={'confirmed':BLUE,'inferred':AMBER,'unknown':RED}.get(status,BLUE); shape.line.width=Pt(1.5)
-            tf=shape.text_frame; tf.clear(); tf.margin_left=Inches(.12); tf.margin_right=Inches(.12); tf.margin_top=Inches(.1); tf.vertical_anchor=MSO_ANCHOR.MIDDLE
-            p=tf.paragraphs[0]; p.text=clean(c.get('name'))+status_label(c); p.font.size=Pt(14); p.font.bold=True; p.font.color.rgb=NAVY; p.alignment=PP_ALIGN.CENTER
-            p2=tf.add_paragraph(); p2.text=clean(c.get('description'))[:100]; p2.font.size=Pt(9); p2.font.color.rgb=GREY; p2.alignment=PP_ALIGN.CENTER
-            p3=tf.add_paragraph(); p3.text=clean(c.get('type','component')).replace('_',' ').title(); p3.font.size=Pt(8); p3.font.color.rgb=BLUE; p3.alignment=PP_ALIGN.CENTER
-        # Connection key is kept below the diagram so long labels never collide with shapes.
-        if conns:
-            key=slide.shapes.add_textbox(Inches(.65), Inches(6.35), Inches(12), Inches(.58))
-            kt=key.text_frame; kt.word_wrap=True; kt.clear()
-            for j,e in enumerate(conns):
-                p=kt.paragraphs[0] if j==0 else kt.add_paragraph(); p.text=f"{j+1}. {clean(e.get('label'))} ({clean(e.get('from'))} → {clean(e.get('to'))})"; p.font.size=Pt(8); p.font.color.rgb=GREY
-        # footer legend
-        lg=slide.shapes.add_textbox(Inches(.65), Inches(7.05), Inches(12), Inches(.22)); p=lg.text_frame.paragraphs[0]; p.text='Evidence: blue = confirmed   |   amber = inferred   |   red = unknown'; p.font.size=Pt(8); p.font.color.rgb=GREY
+    arrows = []
+    for k, e in enumerate(edges):
+        chain = chains[k]
+        x0, y0, _ = pos[chain[0]]
+        x1, y1, _ = pos[chain[-1]]
+        pts = [(x0 + BOX_W, y0 + BOX_H * port[("out", k)])]
+        for lane in chain[1:-1]:
+            pts += [(pos[lane][0], mid_y(lane)), (pos[lane][0] + BOX_W, mid_y(lane))]
+        pts.append((x1, y1 + BOX_H * port[("in", k)]))
+        seg = 2 * ((len(pts) // 2) // 2)  # the gap nearest the middle of the arrow
+        lines = wrap(f"{k + 1}. {clean(e.get('label'))}", LABEL_CHARS, 3)
+        # Sit the label where the arrows are furthest apart: near the end that fans out most.
+        fan_out, fan_in = len(leaving[chain[0]]), len(entering[chain[-1]])
+        t = 0.62 if fan_out > fan_in else 0.38 if fan_in > fan_out else 0.5
+        (px, py), (qx, qy) = pts[seg], pts[seg + 1]
+        label = {"x": px + (qx - px) * ((1 - t) ** 3 * 0 + 1.5 * t * (1 - t) + t ** 3),
+                 "y": py + (qy - py) * (3 * t * t - 2 * t ** 3),
+                 "w": max(len(s) for s in lines) * 5.9 + 14, "h": len(lines) * 14 + 8, "lines": lines,
+                 "gap": col[pairs[k][0]] + seg // 2}
+        if k in flipped:
+            pts.reverse()
+        arrows.append({"id": e["id"], "from": e["from"], "to": e["to"], "n": k + 1, "pts": pts,
+                       "dashed": clean(e.get("kind")).lower() in DASHED_KINDS, "label": label,
+                       "text": clean(e.get("label")), "flipped": k in flipped,
+                       "exit": port[("in" if k in flipped else "out", k)],
+                       "entry": port[("out" if k in flipped else "in", k)]})
+
+    # 7. Labels sharing a gap are pushed apart.
+    by_gap = {}
+    for a in arrows:
+        by_gap.setdefault(a["label"]["gap"], []).append(a["label"])
+    for labels in by_gap.values():
+        labels.sort(key=lambda l: l["y"])
+        for prev, cur in zip(labels, labels[1:]):
+            cur["y"] = max(cur["y"], prev["y"] + (prev["h"] + cur["h"]) / 2 + 4)
+
+    return {"w": width, "h": total_h, "boxes": boxes, "arrows": arrows}
+
+
+def curve_points(p, q, steps=20):
+    """Points along the S-curve between two arrow points (straight when level)."""
+    if abs(p[1] - q[1]) < 0.5:
+        return [p, q]
+    mx = (p[0] + q[0]) / 2
+    pts = []
+    for i in range(steps + 1):
+        t = i / steps
+        a, b, c, d = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3
+        pts.append((a * p[0] + (b + c) * mx + d * q[0], (a + b) * p[1] + (c + d) * q[1]))
+    return pts
+
+
+def arrow_geometry(pts):
+    """Return the arrow's points with the tip shortened, plus the arrowhead triangle."""
+    dx = 1 if pts[-1][0] >= pts[-2][0] else -1
+    tip = pts[-1]
+    body = pts[:-1] + [(tip[0] - dx * 9, tip[1])]
+    head = [tip, (tip[0] - dx * 12, tip[1] - 5.5), (tip[0] - dx * 12, tip[1] + 5.5)]
+    return body, head
+
+
+def text_rows(box):
+    """(text, x, baseline y, size, bold, color) for every line inside a box."""
+    x = box["x"] + (22 if box["shape"] == "pill" else 14)
+    y = box["y"] + (8 if box["shape"] == "cylinder" else 0)
+    rows = []
+    if len(box["name_lines"]) > 1:
+        rows += [(s, x, y + 23 + i * 16, 13, True, NAVY) for i, s in enumerate(box["name_lines"])]
+        type_y = y + 57
+    else:
+        rows += [(s, x, y + 27, 15, True, NAVY) for s in box["name_lines"]]
+        type_y = y + 46
+    rows.append((box["type_line"], x, type_y, 11, False, GREY))
+    rows += [(s, x, type_y + 19 + i * 14, 11, False, TEXT) for i, s in enumerate(box["desc_lines"])]
+    return rows
+
+
+# --------------------------------------------------------------------------- SVG
+
+def render_svg(scene, title):
+    W = max(scene["w"], 760)
+    H = HEADER_H + scene["h"] + FOOTER_H
+    ox = (W - scene["w"]) / 2
+    e = html.escape
+    s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.0f}" height="{H:.0f}" viewBox="0 0 {W:.0f} {H:.0f}" font-family="Aptos,Arial,sans-serif">',
+         f'<rect width="100%" height="100%" fill="{CANVAS}"/>',
+         f'<text x="{MARGIN}" y="38" font-size="22" font-weight="700" fill="{NAVY}">{e(title)}</text>',
+         f'<g transform="translate({ox:.1f},{HEADER_H})">']
+    for a in scene["arrows"]:
+        body, head = arrow_geometry(a["pts"])
+        d = f'M{body[0][0]:.1f},{body[0][1]:.1f}'
+        for p, q in zip(body, body[1:]):
+            if abs(p[1] - q[1]) < 0.5:
+                d += f' L{q[0]:.1f},{q[1]:.1f}'
+            else:
+                mx = (p[0] + q[0]) / 2
+                d += f' C{mx:.1f},{p[1]:.1f} {mx:.1f},{q[1]:.1f} {q[0]:.1f},{q[1]:.1f}'
+        dash = ' stroke-dasharray="7 5"' if a["dashed"] else ''
+        s.append(f'<path d="{d}" fill="none" stroke="{GREY}" stroke-width="2"{dash}/>')
+        s.append('<polygon points="' + ' '.join(f'{x:.1f},{y:.1f}' for x, y in head) + f'" fill="{GREY}"/>')
+    for b in scene["boxes"]:
+        x, y, w, h = b["x"], b["y"], b["w"], b["h"]
+        if b["shape"] == "cylinder":
+            r = 9
+            s.append(f'<path d="M{x},{y + r} A{w / 2},{r} 0 0 1 {x + w},{y + r} V{y + h - r} A{w / 2},{r} 0 0 1 {x},{y + h - r} Z" fill="{b["fill"]}" stroke="{b["border"]}" stroke-width="2"/>')
+            s.append(f'<path d="M{x},{y + r} A{w / 2},{r} 0 0 0 {x + w},{y + r}" fill="none" stroke="{b["border"]}" stroke-width="2"/>')
+        else:
+            rx = 30 if b["shape"] == "pill" else 10
+            s.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{b["fill"]}" stroke="{b["border"]}" stroke-width="2"/>')
+        for text, tx, ty, size, bold, color in text_rows(b):
+            weight = ' font-weight="700"' if bold else ''
+            s.append(f'<text x="{tx:.1f}" y="{ty:.1f}" font-size="{size}"{weight} fill="{color}">{e(text)}</text>')
+    for a in scene["arrows"]:
+        l = a["label"]
+        s.append(f'<rect x="{l["x"] - l["w"] / 2:.1f}" y="{l["y"] - l["h"] / 2:.1f}" width="{l["w"]:.1f}" height="{l["h"]}" rx="5" fill="{WHITE}" stroke="#C3CDD8" stroke-width="1"/>')
+        for i, line in enumerate(l["lines"]):
+            s.append(f'<text x="{l["x"]:.1f}" y="{l["y"] - l["h"] / 2 + 15 + i * 14:.1f}" font-size="11" text-anchor="middle" fill="{NAVY}">{e(line)}</text>')
+    s.append('</g>')
+    s.append(f'<text x="{MARGIN}" y="{H - 13}" font-size="10.5" fill="{GREY}">{e(LEGEND)}</text>')
+    s.append('</svg>')
+    return '\n'.join(s)
+
+
+# --------------------------------------------------------------------------- PNG
+
+_FONTS = {}
+
+
+def _font(size, bold):
+    from PIL import ImageFont
+    key = (round(size), bold)
+    if key not in _FONTS:
+        names = ["arialbd.ttf", "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf"] if bold else \
+                ["arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf"]
+        for name in names:
+            try:
+                _FONTS[key] = ImageFont.truetype(name, key[0])
+                break
+            except OSError:
+                continue
+        else:
+            _FONTS[key] = ImageFont.load_default(key[0])
+    return _FONTS[key]
+
+
+def render_png(scene, title, path, k=2):
+    """Draw the same picture as the SVG with Pillow, so Word can embed it without extra tools."""
+    from PIL import Image, ImageDraw
+    W = max(scene["w"], 760)
+    H = HEADER_H + scene["h"] + FOOTER_H
+    ox, oy = (W - scene["w"]) / 2, HEADER_H
+    img = Image.new("RGB", (int(W * k), int(H * k)), CANVAS)
+    d = ImageDraw.Draw(img)
+
+    def P(x, y):
+        return ((x + ox) * k, (y + oy) * k)
+
+    def write(text, x, y, size, bold, color, anchor="ls", local=True):
+        xy = P(x, y) if local else (x * k, y * k)
+        d.text(xy, text, font=_font(size * k, bold), fill=color, anchor=anchor)
+
+    write(title, MARGIN, 38, 22, True, NAVY, local=False)
+    for a in scene["arrows"]:
+        body, head = arrow_geometry(a["pts"])
+        line = []
+        for p, q in zip(body, body[1:]):
+            line += curve_points(p, q)
+        line = [P(*p) for p in line]
+        if a["dashed"]:
+            on, off, carry, draw_on = 7 * k, 5 * k, 0.0, True
+            for p, q in zip(line, line[1:]):
+                seg = ((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2) ** 0.5
+                at = 0.0
+                while seg - at > 1e-6:
+                    step = min((on if draw_on else off) - carry, seg - at)
+                    if draw_on:
+                        a0, a1 = at / seg, (at + step) / seg
+                        d.line([(p[0] + (q[0] - p[0]) * a0, p[1] + (q[1] - p[1]) * a0),
+                                (p[0] + (q[0] - p[0]) * a1, p[1] + (q[1] - p[1]) * a1)], fill=GREY, width=2 * k)
+                    at += step
+                    carry += step
+                    if carry >= (on if draw_on else off) - 1e-6:
+                        carry, draw_on = 0.0, not draw_on
+        else:
+            d.line(line, fill=GREY, width=2 * k, joint="curve")
+        d.polygon([P(*p) for p in head], fill=GREY)
+    for b in scene["boxes"]:
+        x, y, w, h = b["x"], b["y"], b["w"], b["h"]
+        if b["shape"] == "cylinder":
+            r = 9
+            d.ellipse([P(x, y + h - 2 * r), P(x + w, y + h)], fill=b["fill"], outline=b["border"], width=2 * k)
+            d.rectangle([P(x, y + r), P(x + w, y + h - r)], fill=b["fill"])
+            d.line([P(x, y + r), P(x, y + h - r)], fill=b["border"], width=2 * k)
+            d.line([P(x + w - 1, y + r), P(x + w - 1, y + h - r)], fill=b["border"], width=2 * k)
+            d.ellipse([P(x, y), P(x + w, y + 2 * r)], fill=b["fill"], outline=b["border"], width=2 * k)
+        else:
+            d.rounded_rectangle([P(x, y), P(x + w, y + h)], radius=(30 if b["shape"] == "pill" else 10) * k,
+                                fill=b["fill"], outline=b["border"], width=2 * k)
+        for text, tx, ty, size, bold, color in text_rows(b):
+            write(text, tx, ty, size, bold, color)
+    for a in scene["arrows"]:
+        l = a["label"]
+        d.rounded_rectangle([P(l["x"] - l["w"] / 2, l["y"] - l["h"] / 2), P(l["x"] + l["w"] / 2, l["y"] + l["h"] / 2)],
+                            radius=5 * k, fill=WHITE, outline="#C3CDD8", width=k)
+        for i, line in enumerate(l["lines"]):
+            write(line, l["x"], l["y"] - l["h"] / 2 + 15 + i * 14, 11, False, NAVY, anchor="ms")
+    write(LEGEND, MARGIN, H - 13, 10.5, False, GREY, local=False)
+    img.save(path)
+
+
+# --------------------------------------------------------------------------- PowerPoint
+
+def make_pptx(model, views, scenes, path):
+    from pptx import Presentation
+    from pptx.util import Inches, Pt, Emu
+    from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+    from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+    from pptx.enum.dml import MSO_LINE
+    from pptx.dml.color import RGBColor
+    from pptx.oxml.ns import qn
+
+    def rgb(hex_color):
+        return RGBColor.from_string(hex_color.lstrip("#"))
+
+    def textbox(slide, x, y, w, h, text, size, bold=False, color=NAVY):
+        tb = slide.shapes.add_textbox(x, y, w, h)
+        tb.text_frame.word_wrap = True
+        p = tb.text_frame.paragraphs[0]
+        p.text = text
+        p.font.size = Pt(size); p.font.bold = bold; p.font.color.rgb = rgb(color)
+        return tb
+
+    def new_slide(title=None):
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.background.fill.solid()
+        slide.background.fill.fore_color.rgb = rgb(CANVAS)
+        if title:
+            textbox(slide, Inches(.45), Inches(.22), Inches(12.4), Inches(.6), title, 23, True)
+        return slide
+
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
+
+    cover = new_slide()
+    band = cover.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, Inches(1.05))
+    band.fill.solid(); band.fill.fore_color.rgb = rgb(NAVY); band.line.fill.background()
+    textbox(cover, Inches(.65), Inches(1.75), Inches(12), Inches(1.2), model.get("title", "Architecture Overview"), 30, True)
+    textbox(cover, Inches(.68), Inches(2.85), Inches(11.8), Inches(.65), model.get("subtitle", "Architecture"), 17, color=GREY)
+    textbox(cover, Inches(.68), Inches(3.8), Inches(11.7), Inches(2.2), model.get("summary", "Architecture drawn from a written description."), 16)
+    textbox(cover, Inches(.68), Inches(6.85), Inches(11.8), Inches(.3), "Generated from a shared architecture model · Every shape, arrow and label is editable", 9, color=GREY)
+
+    area_x, area_y, area_w, area_h = Inches(.45), Inches(1.0), Inches(12.43), Inches(5.75)
+    for (view, comps, conns), scene in zip(views, scenes):
+        slide = new_slide(view.get("title", "Architecture view"))
+        s = min(area_w / (scene["w"] * 9144), area_h / (scene["h"] * 9144), 1.2)
+        ox = area_x + (area_w - scene["w"] * 9144 * s) / 2
+        oy = area_y + (area_h - scene["h"] * 9144 * s) / 2
+
+        def X(v): return Emu(int(ox + v * 9144 * s))
+        def Y(v): return Emu(int(oy + v * 9144 * s))
+        def L(v): return Emu(int(v * 9144 * s))
+        def F(pt): return Pt(max(6, round(pt * s, 1)))
+
+        for a in scene["arrows"]:  # arrows first, so boxes sit on top
+            pts = a["pts"]
+            for i, (p, q) in enumerate(zip(pts, pts[1:])):
+                line = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, X(p[0]), Y(p[1]), X(q[0]), Y(q[1]))
+                line.line.color.rgb = rgb(GREY)
+                line.line.width = Pt(1.75)
+                if a["dashed"]:
+                    line.line.dash_style = MSO_LINE.DASH
+                if i == len(pts) - 2:
+                    ln = line.line._get_or_add_ln()
+                    ln.append(ln.makeelement(qn("a:tailEnd"), {"type": "triangle", "w": "med", "len": "med"}))
+        for b in scene["boxes"]:
+            kind = MSO_SHAPE.CAN if b["shape"] == "cylinder" else MSO_SHAPE.ROUNDED_RECTANGLE
+            shape = slide.shapes.add_shape(kind, X(b["x"]), Y(b["y"]), L(b["w"]), L(b["h"]))
+            if b["shape"] != "cylinder":
+                shape.adjustments[0] = 0.5 if b["shape"] == "pill" else 0.09
+            shape.fill.solid(); shape.fill.fore_color.rgb = rgb(b["fill"])
+            shape.line.color.rgb = rgb(b["border"]); shape.line.width = Pt(1.5)
+            tf = shape.text_frame
+            tf.word_wrap = True
+            tf.margin_left = tf.margin_right = L(10); tf.margin_top = tf.margin_bottom = L(4)
+            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            rows = [(b["name"] + b["tag"], 12, True, NAVY), (b["type_line"].split(" · ")[0], 8, False, BLUE)]
+            if b["desc"]:
+                rows.append((b["desc"], 9, False, TEXT))
+            for i, (text, size, bold, color) in enumerate(rows):
+                p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+                p.text = text; p.alignment = PP_ALIGN.CENTER
+                p.font.size = F(size); p.font.bold = bold; p.font.color.rgb = rgb(color)
+        for a in scene["arrows"]:
+            l = a["label"]
+            tb = slide.shapes.add_textbox(X(l["x"] - l["w"] / 2), Y(l["y"] - l["h"] / 2), L(l["w"]), L(l["h"]))
+            tb.fill.solid(); tb.fill.fore_color.rgb = rgb(WHITE)
+            tb.line.color.rgb = rgb("#C3CDD8"); tb.line.width = Pt(.75)
+            tf = tb.text_frame
+            tf.word_wrap = True
+            tf.margin_left = tf.margin_right = L(4); tf.margin_top = tf.margin_bottom = L(2)
+            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p = tf.paragraphs[0]
+            p.text = f'{a["n"]}. {a["text"]}'; p.alignment = PP_ALIGN.CENTER
+            p.font.size = F(8); p.font.color.rgb = rgb(NAVY)
+        textbox(slide, Inches(.45), Inches(6.95), Inches(12.4), Inches(.3), LEGEND, 9, color=GREY)
+
+    notes = [("What was assumed", model.get("assumptions") or []), ("What is still unknown", model.get("open_questions") or [])]
+    if any(items for _, items in notes):
+        slide = new_slide("Assumptions and open questions")
+        top = Inches(1.1)
+        for heading, items in notes:
+            textbox(slide, Inches(.65), top, Inches(12), Inches(.4), heading, 16, True)
+            body = textbox(slide, Inches(.65), top + Inches(.45), Inches(12), Inches(2.3), "", 13, color=TEXT)
+            for i, item in enumerate(items or ["None recorded."]):
+                p = body.text_frame.paragraphs[0] if i == 0 else body.text_frame.add_paragraph()
+                p.text = "•  " + clean(item)
+                p.font.size = Pt(13); p.font.color.rgb = rgb(TEXT); p.space_after = Pt(6)
+            top += Inches(2.85)
     prs.save(path)
 
-def make_drawio(model, views, path):
-    mx=Element('mxfile', {'host':'app.diagrams.net','modified':'2026-01-01T00:00:00.000Z','agent':'Architecture Visualizer','version':'24.7.17','type':'device'})
-    for vi,(view,comps,conns) in enumerate(views):
-        diagram=SubElement(mx,'diagram',{'id':str(view.get('id',f'page-{vi}')),'name':clean(view.get('title',f'Architecture {vi+1}'))})
-        model_el=SubElement(diagram,'mxGraphModel',{'dx':'1200','dy':'800','grid':'1','gridSize':'10','guides':'1','tooltips':'1','connect':'1','arrows':'1','fold':'1','page':'1','pageScale':'1','pageWidth':'1200','pageHeight':'850','math':'0','shadow':'0'})
-        root=SubElement(model_el,'root'); SubElement(root,'mxCell',{'id':'0'}); SubElement(root,'mxCell',{'id':'1','parent':'0'})
-        n=max(1,len(comps)); cols=min(4,n); bw=210; bh=90; gapx=75; gapy=100; pos={}
-        for i,c in enumerate(comps):
-            x=60+(i%cols)*(bw+gapx); y=80+(i//cols)*(bh+gapy); pos[c['id']]=(x,y)
-            cell=SubElement(root,'mxCell',{'id':c['id'],'value':html.escape(clean(c['name'])+status_label(c))+'&#xa;'+html.escape(clean(c.get('description'))),'style':'rounded=1;whiteSpace=wrap;html=1;fillColor='+TYPE_COLORS.get(c.get('type'),'#EAF0F6')+';strokeColor='+({'confirmed':'#3069A4','inferred':'#B56F1C','unknown':'#AA4141'}.get(c.get('evidence_status','unknown')))+';fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;','vertex':'1','parent':'1'})
-            SubElement(cell,'mxGeometry',{'x':str(x),'y':str(y),'width':str(bw),'height':str(bh),'as':'geometry'})
-        for j,e in enumerate(conns):
-            if e.get('from') not in pos or e.get('to') not in pos: continue
-            edge=SubElement(root,'mxCell',{'id':e['id'],'value':str(j+1),'style':'edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#526579;fontSize=11;fontStyle=1;labelBackgroundColor=#FFFFFF;','edge':'1','parent':'1','source':e['from'],'target':e['to']})
-            SubElement(edge,'mxGeometry',{'relative':'1','as':'geometry'})
-            note_id=f"{e['id']}_label"; note=SubElement(root,'mxCell',{'id':note_id,'value':html.escape(f"{j+1}. {clean(e.get('label'))} ({e.get('from')} → {e.get('to')})"),'style':'text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#34495E;','vertex':'1','parent':'1'})
-            SubElement(note,'mxGeometry',{'x':'60','y':str(80+math.ceil(len(comps)/cols)*(bh+gapy)+j*24),'width':'900','height':'22','as':'geometry'})
-    xml=minidom.parseString(tostring(mx,encoding='utf-8')).toprettyxml(indent='  ',encoding='utf-8')
-    path.write_bytes(xml)
 
-def make_svg(model, views, path):
-    view,comps,conns=views[0]; path.write_text(svg_for_view(view.get('title',model.get('title','Architecture')),comps,conns),encoding='utf-8')
+# --------------------------------------------------------------------------- Draw.io
 
-def make_docx(model, views, svg_path, path):
-    png_path = svg_path.with_suffix('.png')
-    try:
-        import cairosvg
-        cairosvg.svg2png(url=str(svg_path), write_to=str(png_path), output_width=1600)
-    except Exception as exc:
-        png_path = None
-        print(f'WARNING: Could not rasterize SVG for Word preview: {exc}')
-    doc=Document(); sec=doc.sections[0]; sec.top_margin=DocInches(.65); sec.bottom_margin=DocInches(.65)
-    styles=doc.styles; styles['Normal'].font.name='Aptos'; styles['Normal'].font.size=DocPt(10)
-    styles['Title'].font.name='Aptos Display'; styles['Title'].font.color.rgb=DocRGB(24,49,83)
-    doc.add_heading(model.get('title','Architecture Overview'),0)
-    if model.get('subtitle'): doc.add_paragraph(model['subtitle'],style='Subtitle')
-    if model.get('summary'): doc.add_heading('Executive summary',1); doc.add_paragraph(model['summary'])
-    doc.add_heading('Scope',1)
-    for x in model.get('scope',[]): doc.add_paragraph(x,style='List Bullet')
-    doc.add_heading('Architecture components',1)
-    t=doc.add_table(rows=1, cols=4); t.style='Light Shading Accent 1'
-    for cell,txt in zip(t.rows[0].cells,['Component','Type','Responsibility','Evidence']): cell.text=txt
-    for c in model.get('components',[]):
-        cells=t.add_row().cells; cells[0].text=clean(c.get('name')); cells[1].text=clean(c.get('type')).replace('_',' ').title(); cells[2].text=clean(c.get('description')); cells[3].text=clean(c.get('evidence_status','unknown')).title()
-    doc.add_heading('Integrations and connections',1)
-    t=doc.add_table(rows=1, cols=5); t.style='Light Shading Accent 1'
-    for cell,txt in zip(t.rows[0].cells,['From','To','Interaction','Kind','Evidence']): cell.text=txt
-    byid={c['id']:c for c in model.get('components',[])}
-    for e in model.get('connections',[]):
-        cells=t.add_row().cells; cells[0].text=byid.get(e.get('from'),{}).get('name',e.get('from','')); cells[1].text=byid.get(e.get('to'),{}).get('name',e.get('to','')); cells[2].text=clean(e.get('label')); cells[3].text=clean(e.get('kind','interaction')); cells[4].text=clean(e.get('evidence_status','unknown')).title()
-    doc.add_heading('Architecture diagrams',1)
-    for i,(v,cs,es) in enumerate(views):
-        if i: doc.add_page_break()
-        doc.add_heading(v.get('title',f'View {i+1}'),2)
-        if i==0 and png_path and png_path.exists(): doc.add_picture(str(png_path),width=DocInches(6.8))
-        else: doc.add_paragraph(f"Diagram view: {v.get('type','architecture')}. Refer to the editable PowerPoint and Draw.io files for the full diagram.")
-    for title,key in [('Assumptions','assumptions'),('Open questions','open_questions')]:
-        doc.add_heading(title,1)
-        items=model.get(key,[]) or ['None recorded.']
-        for x in items: doc.add_paragraph(x,style='List Bullet')
-    doc.add_paragraph('Generated from the shared architecture JSON model. PowerPoint and Draw.io files contain individually editable diagram elements.')
+def make_drawio(model, views, scenes, path):
+    mx = Element("mxfile", {"host": "app.diagrams.net", "agent": "Architecture Visualizer", "version": "24.7.17", "type": "device"})
+    for vi, ((view, comps, conns), scene) in enumerate(zip(views, scenes)):
+        diagram = SubElement(mx, "diagram", {"id": str(view.get("id", f"page-{vi}")), "name": clean(view.get("title", f"Architecture {vi + 1}"))})
+        W, H = int(scene["w"]), int(scene["h"] + 110)
+        gm = SubElement(diagram, "mxGraphModel", {"dx": "1200", "dy": "800", "grid": "1", "gridSize": "10", "guides": "1", "tooltips": "1",
+                                                  "connect": "1", "arrows": "1", "fold": "1", "page": "1", "pageScale": "1",
+                                                  "pageWidth": str(max(W, 1100)), "pageHeight": str(max(H, 700)), "math": "0", "shadow": "0"})
+        root = SubElement(gm, "root")
+        SubElement(root, "mxCell", {"id": "0"})
+        SubElement(root, "mxCell", {"id": "1", "parent": "0"})
+        oy = 50
+
+        def text_cell(cid, value, x, y, w, h, style):
+            cell = SubElement(root, "mxCell", {"id": cid, "value": value, "style": style, "vertex": "1", "parent": "1"})
+            SubElement(cell, "mxGeometry", {"x": str(int(x)), "y": str(int(y)), "width": str(int(w)), "height": str(int(h)), "as": "geometry"})
+
+        text_cell("title", html.escape(clean(view.get("title", ""))), MARGIN, 4, max(W - 2 * MARGIN, 600), 36,
+                  f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor={NAVY};")
+        for b in scene["boxes"]:
+            value = f'<b>{html.escape(b["name"] + b["tag"])}</b><br><font style="font-size:10px" color="{GREY}">{html.escape(b["type_line"].split(" · ")[0])}</font>'
+            if b["desc"]:
+                value += f'<br><font style="font-size:11px" color="{TEXT}">{html.escape(b["desc"])}</font>'
+            look = {"cylinder": "shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;", "pill": "rounded=1;arcSize=50;"}.get(b["shape"], "rounded=1;arcSize=12;")
+            text_cell("n_" + b["id"], value, b["x"], b["y"] + oy, b["w"], b["h"],
+                      look + f'whiteSpace=wrap;html=1;fillColor={b["fill"]};strokeColor={b["border"]};strokeWidth=2;fontColor={NAVY};fontSize=14;align=center;verticalAlign=middle;spacing=6;')
+        for a in scene["arrows"]:
+            side = (0, 1) if a["flipped"] else (1, 0)
+            style = (f'html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor={GREY};strokeWidth=2;fontSize=11;fontColor={NAVY};'
+                     f'labelBackgroundColor={WHITE};exitX={side[0]};exitY={a["exit"]:.2f};exitDx=0;exitDy=0;'
+                     f'entryX={side[1]};entryY={a["entry"]:.2f};entryDx=0;entryDy=0;' + ("dashed=1;dashPattern=6 4;" if a["dashed"] else ""))
+            edge = SubElement(root, "mxCell", {"id": "e_" + a["id"], "value": html.escape(f'{a["n"]}. {a["text"]}'), "style": style,
+                                               "edge": "1", "parent": "1", "source": "n_" + a["from"], "target": "n_" + a["to"]})
+            geo = SubElement(edge, "mxGeometry", {"relative": "1", "as": "geometry"})
+            if len(a["pts"]) > 2:
+                arr = SubElement(geo, "Array", {"as": "points"})
+                for x, y in a["pts"][1:-1]:
+                    SubElement(arr, "mxPoint", {"x": str(int(x)), "y": str(int(y + oy))})
+        text_cell("legend", html.escape(LEGEND), MARGIN, scene["h"] + oy + 10, max(W - 2 * MARGIN, 900), 24,
+                  f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor={GREY};")
+    path.write_bytes(minidom.parseString(tostring(mx, encoding="utf-8")).toprettyxml(indent="  ", encoding="utf-8"))
+
+
+# --------------------------------------------------------------------------- Word
+
+def make_docx(model, views, scenes, pngs, path):
+    from docx import Document
+    from docx.shared import Inches, Pt, RGBColor
+
+    doc = Document()
+    sec = doc.sections[0]
+    sec.top_margin = sec.bottom_margin = Inches(.65)
+    sec.left_margin = sec.right_margin = Inches(.8)
+    doc.styles["Normal"].font.name = "Aptos"
+    doc.styles["Normal"].font.size = Pt(10)
+    doc.styles["Title"].font.name = "Aptos Display"
+    doc.styles["Title"].font.color.rgb = RGBColor(24, 49, 83)
+    by_id = {c["id"]: c for c in model.get("components", [])}
+
+    def name_of(cid):
+        return clean(by_id.get(cid, {}).get("name", cid))
+
+    def table(headers, rows):
+        t = doc.add_table(rows=1, cols=len(headers))
+        t.style = "Light Shading Accent 1"
+        for cell, text in zip(t.rows[0].cells, headers):
+            cell.text = text
+        for row in rows:
+            for cell, text in zip(t.add_row().cells, row):
+                cell.text = text
+
+    doc.add_heading(model.get("title", "Architecture Overview"), 0)
+    if model.get("subtitle"):
+        doc.add_paragraph(model["subtitle"], style="Subtitle")
+    if model.get("summary"):
+        doc.add_heading("Summary", 1)
+        doc.add_paragraph(model["summary"])
+    if model.get("scope"):
+        doc.add_heading("What this covers", 1)
+        for x in model["scope"]:
+            doc.add_paragraph(x, style="List Bullet")
+
+    doc.add_heading("Diagrams", 1)
+    for i, ((view, comps, conns), scene) in enumerate(zip(views, scenes)):
+        doc.add_heading(view.get("title", f"View {i + 1}"), 2)
+        if view.get("scenario"):
+            doc.add_paragraph(f"Scenario: {clean(view['scenario'])}")
+        if pngs[i] and pngs[i].exists():
+            doc.add_picture(str(pngs[i]), width=Inches(6.9))
+        else:
+            doc.add_paragraph("Picture not available. See the PowerPoint or Draw.io file for this diagram.")
+        for a in scene["arrows"]:
+            doc.add_paragraph(f'{a["n"]}. {name_of(a["from"])} → {name_of(a["to"])}: {a["text"]}')
+
+    doc.add_heading("Parts of the system", 1)
+    table(["Part", "Type", "What it does", "Source", "Notes"],
+          [[clean(c.get("name")), type_label(c), clean(c.get("description")), status_of(c).title(),
+            clean(c.get("notes") or c.get("evidence"))] for c in model.get("components", [])])
+    doc.add_heading("How the parts are linked", 1)
+    table(["From", "To", "What happens", "Kind", "Source"],
+          [[name_of(e.get("from")), name_of(e.get("to")), clean(e.get("label")), clean(e.get("kind", "interaction")).replace("_", " "),
+            status_of(e).title()] for e in model.get("connections", [])])
+    for title, key in (("Assumptions", "assumptions"), ("Open questions", "open_questions")):
+        doc.add_heading(title, 1)
+        for x in model.get(key) or ["None recorded."]:
+            doc.add_paragraph(x, style="List Bullet")
+    doc.add_paragraph("Generated from the shared architecture model. The pictures here are for reading; "
+                      "use the PowerPoint or Draw.io file to move or restyle individual shapes.")
     doc.save(path)
 
+
+# --------------------------------------------------------------------------- main
+
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('model',type=Path); ap.add_argument('--out-dir',type=Path,default=Path('architecture-output')); args=ap.parse_args()
-    model=json.loads(args.model.read_text(encoding='utf-8')); args.out_dir.mkdir(parents=True,exist_ok=True)
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("model", type=Path)
+    ap.add_argument("--out-dir", type=Path, default=Path("architecture-output"))
+    args = ap.parse_args()
+    model = json.loads(args.model.read_text(encoding="utf-8"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     from validate_model import validate
-    errors,warnings=validate(model)
-    if errors: raise SystemExit('Model validation failed:\n'+'\n'.join(errors))
-    views=load_views(model)
-    json_out=args.out_dir/'architecture.json'; json_out.write_text(json.dumps(model,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
-    svg=args.out_dir/'architecture.svg'; make_svg(model,views,svg)
-    pptx=args.out_dir/'architecture.pptx'; make_pptx(model,views,pptx)
-    drawio=args.out_dir/'architecture.drawio'; make_drawio(model,views,drawio)
-    docx=args.out_dir/'architecture.docx'; make_docx(model,views,svg,docx)
-    print('Generated:');
-    for p in (pptx,drawio,docx,json_out,svg): print(f' - {p}')
+    errors, warnings = validate(model)
+    if errors:
+        raise SystemExit("Model validation failed:\n" + "\n".join(errors))
+
+    out = args.out_dir
+    pics = out / "diagrams"
+    pics.mkdir(parents=True, exist_ok=True)
+    views = load_views(model)
+    scenes = [build_scene(comps, conns) for _, comps, conns in views]
+    made, skipped = [], []
+
+    json_out = out / "architecture.json"
+    json_out.write_text(json.dumps(model, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    made.append(json_out)
+
+    pngs = []
+    for i, ((view, _, _), scene) in enumerate(zip(views, scenes), 1):
+        title = clean(view.get("title") or model.get("title") or "Architecture")
+        stem = f"{i:02d}-{re.sub(r'[^A-Za-z0-9_-]+', '-', str(view.get('id', 'view')))}"
+        svg = render_svg(scene, title)
+        (pics / f"{stem}.svg").write_text(svg, encoding="utf-8")
+        made.append(pics / f"{stem}.svg")
+        if i == 1:
+            (out / "architecture.svg").write_text(svg, encoding="utf-8")
+            made.append(out / "architecture.svg")
+        try:
+            render_png(scene, title, pics / f"{stem}.png")
+            pngs.append(pics / f"{stem}.png")
+            made.append(pngs[-1])
+        except ImportError as exc:
+            pngs.append(None)
+            if i == 1:
+                skipped.append(f"PNG pictures (and the pictures inside Word): {exc}")
+
+    for name, build in (("architecture.pptx", lambda p: make_pptx(model, views, scenes, p)),
+                        ("architecture.drawio", lambda p: make_drawio(model, views, scenes, p)),
+                        ("architecture.docx", lambda p: make_docx(model, views, scenes, pngs, p))):
+        try:
+            build(out / name)
+            made.append(out / name)
+        except ImportError as exc:
+            skipped.append(f"{name}: {exc}")
+
+    print("Generated:")
+    for p in made:
+        print(f" - {p}")
+    if skipped:
+        print("Not generated (missing Python package, run: python -m pip install -r requirements.txt):")
+        for s in skipped:
+            print(f" - {s}")
     if warnings:
-        print('Warnings:'); [print(' - '+w) for w in warnings]
-if __name__=='__main__': main()
+        print("Warnings:")
+        for w in warnings:
+            print(f" - {w}")
+    return 1 if skipped else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

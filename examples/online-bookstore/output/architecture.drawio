@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mxfile host="app.diagrams.net" agent="Architecture Visualizer" version="24.7.17" type="device">
+  <diagram id="big-picture" name="The big picture: who uses the shop">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1468" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="The big picture: who uses the shop" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1412" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_shopper" value="&lt;b&gt;Shoppers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;People who browse and buy books&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="154" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_manager" value="&lt;b&gt;Store Managers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Staff who run the shop&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="306" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_website" value="&lt;b&gt;Website&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Where shoppers browse and buy books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_mobile_app" value="&lt;b&gt;Mobile App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The same shop on a phone&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_dashboard" value="&lt;b&gt;Admin Dashboard&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Where managers see sales reports and add new books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_store_api" value="&lt;b&gt;Store API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one backend behind the website, the app and the dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_catalog_db" value="&lt;b&gt;Catalog Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the full list of books&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="154" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_payment" value="&lt;b&gt;Payment Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Takes the money for an order&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="306" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e1" value="1. Browses and buys" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_shopper" target="n_website">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e2" value="2. Browses and buys" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_shopper" target="n_mobile_app">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e3" value="3. Runs the shop" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_manager" target="n_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e4" value="4. HTTPS requests" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_website" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e5" value="5. HTTPS requests" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_mobile_app" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e6" value="6. Adds new books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_dashboard" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e9" value="7. Looks up and saves books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_catalog_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e16" value="8. Take payment" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_payment">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="538" width="1412" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="browse-search" name="Signing in, browsing and searching">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Signing in, browsing and searching" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1016" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_website" value="&lt;b&gt;Website&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Where shoppers browse and buy books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="306" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_store_api" value="&lt;b&gt;Store API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one backend behind the website, the app and the dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_google" value="&lt;b&gt;Google Sign-In&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;External&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Confirms who the shopper is&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F0ECF8;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_book_cache" value="&lt;b&gt;Book Cache&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Redis cache of the most popular books&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_catalog_db" value="&lt;b&gt;Catalog Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the full list of books&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_search" value="&lt;b&gt;Search Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Finds books quickly when a shopper searches&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="534" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_catalog_sync" value="&lt;b&gt;Catalog Sync Job&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Copies all books into search every night&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e4" value="1. HTTPS requests" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_website" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e7" value="2. Checks sign-in" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_google">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e8" value="3. Checks here first" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.41;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_book_cache">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e9" value="4. Looks up and saves books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.59;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_catalog_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e10" value="5. Book search" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_search">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e11" value="6. Reads all books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_catalog_sync" target="n_catalog_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e12" value="7. Copies books nightly" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_catalog_sync" target="n_search">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="690" width="1016" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="checkout" name="Checkout: stock check, saving the order, payment">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1468" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Checkout: stock check, saving the order, payment" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1412" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_website" value="&lt;b&gt;Website&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Where shoppers browse and buy books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_store_api" value="&lt;b&gt;Store API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one backend behind the website, the app and the dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_inventory" value="&lt;b&gt;Inventory Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Knows how many copies of each book are in stock&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_inventory_db" value="&lt;b&gt;Inventory Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the stock numbers&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="154" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_order_db" value="&lt;b&gt;Order Database [INFERRED]&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the saved orders&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#B56F1C;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_payment" value="&lt;b&gt;Payment Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Takes the money for an order&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_stripe" value="&lt;b&gt;Stripe&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;External&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Charges the shopper&amp;#x27;s card&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F0ECF8;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="306" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e4" value="1. HTTPS requests" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_website" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e13" value="2. Checks stock" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_inventory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e14" value="3. Read / write" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_inventory" target="n_inventory_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e15" value="4. Saves order" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_order_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e16" value="5. Take payment" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_payment">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e17" value="6. Charge card" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_payment" target="n_stripe">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="538" width="1412" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="after-payment" name="After the payment: shipping, email and stock">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1468" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="After the payment: shipping, email and stock" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1412" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_store_api" value="&lt;b&gt;Store API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one backend behind the website, the app and the dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_order_queue" value="&lt;b&gt;Order Queue&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Queue&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Holds a message for every paid order&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FCEBEC;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_shipping" value="&lt;b&gt;Shipping Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Books deliveries and tracks them&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_email" value="&lt;b&gt;Email Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Sends the order confirmation email&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_inventory" value="&lt;b&gt;Inventory Service&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Knows how many copies of each book are in stock&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_dhl" value="&lt;b&gt;DHL&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;External&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Courier that delivers the books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F0ECF8;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_sendgrid" value="&lt;b&gt;SendGrid&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;External&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Delivers the email to the shopper&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F0ECF8;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_inventory_db" value="&lt;b&gt;Inventory Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the stock numbers&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="382" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e18" value="1. Order paid message" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_store_api" target="n_order_queue">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e19" value="2. Picks up order" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_order_queue" target="n_shipping">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e20" value="3. Picks up order" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_order_queue" target="n_email">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e21" value="4. Picks up order" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_order_queue" target="n_inventory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e22" value="5. Books delivery" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_shipping" target="n_dhl">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e23" value="6. Delivery updates" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.78;exitDx=0;exitDy=0;entryX=1;entryY=0.78;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_dhl" target="n_shipping">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e24" value="7. Confirmation email" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_email" target="n_sendgrid">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e25" value="8. Lowers stock" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_inventory" target="n_inventory_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="538" width="1412" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="reports" name="Nightly reports and managing the shop">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1468" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Nightly reports and managing the shop" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1412" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_manager" value="&lt;b&gt;Store Managers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Staff who run the shop&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="108" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_dashboard" value="&lt;b&gt;Admin Dashboard&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;User Interface&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Where managers see sales reports and add new books&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="78" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_store_api" value="&lt;b&gt;Store API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one backend behind the website, the app and the dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="108" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_catalog_db" value="&lt;b&gt;Catalog Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the full list of books&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1216" y="184" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_report_job" value="&lt;b&gt;Sales Report Job&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Builds a sales summary every night&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="28" y="260" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_order_db" value="&lt;b&gt;Order Database [INFERRED]&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the saved orders&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#B56F1C;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="424" y="230" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_reports_folder" value="&lt;b&gt;Reports Folder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the nightly summary files&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="820" y="260" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e3" value="1. Runs the shop" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_manager" target="n_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e6" value="2. Adds new books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_dashboard" target="n_store_api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e9" value="3. Looks up and saves books" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_store_api" target="n_catalog_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e26" value="4. Reads day&amp;#x27;s orders" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_report_job" target="n_order_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e27" value="5. Summary file" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_report_job" target="n_reports_folder">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="424" y="395"/>
+              <mxPoint x="648" y="395"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_e28" value="6. Reads reports" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_dashboard" target="n_reports_folder">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="446" width="1412" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

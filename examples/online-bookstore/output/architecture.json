@@ -1,0 +1,608 @@
+{
+  "title": "PageTurn Online Bookstore",
+  "subtitle": "Drawn from the plain-English description in description.md",
+  "version": "2.0",
+  "source_documents": [
+    "description.md"
+  ],
+  "summary": "Shoppers buy books on a website or a mobile app, and store managers run the shop from an Admin Dashboard. All three use one backend, the Store API. It checks sign-in with Google, looks up and searches books, checks stock, takes payment through Stripe, and hands paid orders to shipping, email and stock updates through a queue. Two nightly jobs keep search and sales reports up to date.",
+  "scope": [
+    "Who uses the shop and how they reach it",
+    "Signing in, browsing and searching",
+    "Checkout: stock check, saving the order, payment",
+    "After payment: shipping, confirmation email, stock update",
+    "Nightly sales reports and adding new books"
+  ],
+  "components": [
+    {
+      "id": "shopper",
+      "name": "Shoppers",
+      "type": "actor",
+      "description": "People who browse and buy books",
+      "boundary": "people",
+      "evidence_status": "confirmed",
+      "evidence": "Shoppers browse and buy books on our website."
+    },
+    {
+      "id": "manager",
+      "name": "Store Managers",
+      "type": "actor",
+      "description": "Staff who run the shop",
+      "boundary": "people",
+      "evidence_status": "confirmed",
+      "evidence": "Our store managers do not use the shop itself; they use a separate Admin Dashboard."
+    },
+    {
+      "id": "website",
+      "name": "Website",
+      "type": "user_interface",
+      "description": "Where shoppers browse and buy books",
+      "boundary": "screens",
+      "evidence_status": "confirmed",
+      "evidence": "Shoppers browse and buy books on our website."
+    },
+    {
+      "id": "mobile_app",
+      "name": "Mobile App",
+      "type": "user_interface",
+      "description": "The same shop on a phone",
+      "boundary": "screens",
+      "evidence_status": "confirmed",
+      "evidence": "There is also a mobile app that does the same thing."
+    },
+    {
+      "id": "dashboard",
+      "name": "Admin Dashboard",
+      "type": "user_interface",
+      "description": "Where managers see sales reports and add new books",
+      "boundary": "screens",
+      "evidence_status": "confirmed",
+      "evidence": "Store managers open the Admin Dashboard to see those reports. Managers also use the dashboard to add new books."
+    },
+    {
+      "id": "store_api",
+      "name": "Store API",
+      "type": "application",
+      "description": "The one backend behind the website, the app and the dashboard",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "all talk to one backend that we call the Store API"
+    },
+    {
+      "id": "google",
+      "name": "Google Sign-In",
+      "type": "external",
+      "description": "Confirms who the shopper is",
+      "boundary": "outside",
+      "evidence_status": "confirmed",
+      "evidence": "Shoppers sign in with their Google account. The Store API checks each sign-in with Google."
+    },
+    {
+      "id": "catalog_db",
+      "name": "Catalog Database",
+      "type": "database",
+      "description": "Keeps the full list of books",
+      "boundary": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API looks up books in the Catalog Database."
+    },
+    {
+      "id": "book_cache",
+      "name": "Book Cache",
+      "type": "database",
+      "description": "Redis cache of the most popular books",
+      "boundary": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The most popular books are also kept in a Redis cache, which we call the Book Cache"
+    },
+    {
+      "id": "search",
+      "name": "Search Service",
+      "type": "service",
+      "description": "Finds books quickly when a shopper searches",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "the Store API asks the Search Service, because it is much quicker at finding books"
+    },
+    {
+      "id": "catalog_sync",
+      "name": "Catalog Sync Job",
+      "type": "service",
+      "description": "Copies all books into search every night",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "Every night a Catalog Sync Job reads all the books from the Catalog Database and copies them into the Search Service"
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory Service",
+      "type": "service",
+      "description": "Knows how many copies of each book are in stock",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API asks the Inventory Service whether the books are in stock."
+    },
+    {
+      "id": "inventory_db",
+      "name": "Inventory Database",
+      "type": "database",
+      "description": "Keeps the stock numbers",
+      "boundary": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The Inventory Service keeps stock numbers in its own Inventory Database."
+    },
+    {
+      "id": "order_db",
+      "name": "Order Database",
+      "type": "database",
+      "description": "Keeps the saved orders",
+      "boundary": "data",
+      "evidence_status": "inferred",
+      "notes": "The Store API saves the order and the Sales Report Job reads the day's orders, so orders must be kept somewhere. The description does not name the storage."
+    },
+    {
+      "id": "payment",
+      "name": "Payment Service",
+      "type": "service",
+      "description": "Takes the money for an order",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API asks the Payment Service to take the money."
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "type": "external",
+      "description": "Charges the shopper's card",
+      "boundary": "outside",
+      "evidence_status": "confirmed",
+      "evidence": "The Payment Service uses Stripe to charge the card."
+    },
+    {
+      "id": "order_queue",
+      "name": "Order Queue",
+      "type": "queue",
+      "description": "Holds a message for every paid order",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "the Store API puts a message on the Order Queue"
+    },
+    {
+      "id": "shipping",
+      "name": "Shipping Service",
+      "type": "service",
+      "description": "Books deliveries and tracks them",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "The Shipping Service picks up the order and books a delivery"
+    },
+    {
+      "id": "dhl",
+      "name": "DHL",
+      "type": "external",
+      "description": "Courier that delivers the books",
+      "boundary": "outside",
+      "evidence_status": "confirmed",
+      "evidence": "books a delivery with our courier, DHL"
+    },
+    {
+      "id": "email",
+      "name": "Email Service",
+      "type": "service",
+      "description": "Sends the order confirmation email",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "The Email Service sends the shopper a confirmation email"
+    },
+    {
+      "id": "sendgrid",
+      "name": "SendGrid",
+      "type": "external",
+      "description": "Delivers the email to the shopper",
+      "boundary": "outside",
+      "evidence_status": "confirmed",
+      "evidence": "sends the shopper a confirmation email through SendGrid"
+    },
+    {
+      "id": "report_job",
+      "name": "Sales Report Job",
+      "type": "service",
+      "description": "Builds a sales summary every night",
+      "boundary": "backend",
+      "evidence_status": "confirmed",
+      "evidence": "Every night a Sales Report Job reads the day's orders"
+    },
+    {
+      "id": "reports_folder",
+      "name": "Reports Folder",
+      "type": "database",
+      "description": "Keeps the nightly summary files",
+      "boundary": "data",
+      "evidence_status": "confirmed",
+      "evidence": "puts a summary file in the Reports Folder"
+    }
+  ],
+  "connections": [
+    {
+      "id": "e1",
+      "from": "shopper",
+      "to": "website",
+      "label": "Browses and buys",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Shoppers browse and buy books on our website."
+    },
+    {
+      "id": "e2",
+      "from": "shopper",
+      "to": "mobile_app",
+      "label": "Browses and buys",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "There is also a mobile app that does the same thing."
+    },
+    {
+      "id": "e3",
+      "from": "manager",
+      "to": "dashboard",
+      "label": "Runs the shop",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Store managers open the Admin Dashboard"
+    },
+    {
+      "id": "e4",
+      "from": "website",
+      "to": "store_api",
+      "label": "HTTPS requests",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "They talk to it over HTTPS."
+    },
+    {
+      "id": "e5",
+      "from": "mobile_app",
+      "to": "store_api",
+      "label": "HTTPS requests",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "They talk to it over HTTPS."
+    },
+    {
+      "id": "e6",
+      "from": "dashboard",
+      "to": "store_api",
+      "label": "Adds new books",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The dashboard sends new books to the Store API"
+    },
+    {
+      "id": "e7",
+      "from": "store_api",
+      "to": "google",
+      "label": "Checks sign-in",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API checks each sign-in with Google."
+    },
+    {
+      "id": "e8",
+      "from": "store_api",
+      "to": "book_cache",
+      "label": "Checks here first",
+      "kind": "data",
+      "evidence_status": "confirmed",
+      "evidence": "so the Store API checks there first"
+    },
+    {
+      "id": "e9",
+      "from": "store_api",
+      "to": "catalog_db",
+      "label": "Looks up and saves books",
+      "kind": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API looks up books in the Catalog Database. ... which saves them in the Catalog Database."
+    },
+    {
+      "id": "e10",
+      "from": "store_api",
+      "to": "search",
+      "label": "Book search",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "the Store API asks the Search Service"
+    },
+    {
+      "id": "e11",
+      "from": "catalog_sync",
+      "to": "catalog_db",
+      "label": "Reads all books",
+      "kind": "batch",
+      "evidence_status": "confirmed",
+      "evidence": "a Catalog Sync Job reads all the books from the Catalog Database"
+    },
+    {
+      "id": "e12",
+      "from": "catalog_sync",
+      "to": "search",
+      "label": "Copies books nightly",
+      "kind": "batch",
+      "evidence_status": "confirmed",
+      "evidence": "and copies them into the Search Service"
+    },
+    {
+      "id": "e13",
+      "from": "store_api",
+      "to": "inventory",
+      "label": "Checks stock",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API asks the Inventory Service whether the books are in stock."
+    },
+    {
+      "id": "e14",
+      "from": "inventory",
+      "to": "inventory_db",
+      "label": "Read / write",
+      "kind": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The Inventory Service keeps stock numbers in its own Inventory Database."
+    },
+    {
+      "id": "e15",
+      "from": "store_api",
+      "to": "order_db",
+      "label": "Saves order",
+      "kind": "data",
+      "evidence_status": "inferred",
+      "notes": "The description says the Store API saves the order. The Order Database it saves to is inferred."
+    },
+    {
+      "id": "e16",
+      "from": "store_api",
+      "to": "payment",
+      "label": "Take payment",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Store API asks the Payment Service to take the money."
+    },
+    {
+      "id": "e17",
+      "from": "payment",
+      "to": "stripe",
+      "label": "Charge card",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Payment Service uses Stripe to charge the card."
+    },
+    {
+      "id": "e18",
+      "from": "store_api",
+      "to": "order_queue",
+      "label": "Order paid message",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Once the payment has worked, the Store API puts a message on the Order Queue."
+    },
+    {
+      "id": "e19",
+      "from": "order_queue",
+      "to": "shipping",
+      "label": "Picks up order",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Shipping Service picks up the order"
+    },
+    {
+      "id": "e20",
+      "from": "order_queue",
+      "to": "email",
+      "label": "Picks up order",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Three things listen to that queue"
+    },
+    {
+      "id": "e21",
+      "from": "order_queue",
+      "to": "inventory",
+      "label": "Picks up order",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Three things listen to that queue"
+    },
+    {
+      "id": "e22",
+      "from": "shipping",
+      "to": "dhl",
+      "label": "Books delivery",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "books a delivery with our courier, DHL"
+    },
+    {
+      "id": "e23",
+      "from": "dhl",
+      "to": "shipping",
+      "label": "Delivery updates",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Later, DHL sends delivery updates back to the Shipping Service."
+    },
+    {
+      "id": "e24",
+      "from": "email",
+      "to": "sendgrid",
+      "label": "Confirmation email",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "sends the shopper a confirmation email through SendGrid"
+    },
+    {
+      "id": "e25",
+      "from": "inventory",
+      "to": "inventory_db",
+      "label": "Lowers stock",
+      "kind": "data",
+      "evidence_status": "confirmed",
+      "evidence": "The Inventory Service lowers the stock numbers for the books that were sold."
+    },
+    {
+      "id": "e26",
+      "from": "report_job",
+      "to": "order_db",
+      "label": "Reads day's orders",
+      "kind": "batch",
+      "evidence_status": "inferred",
+      "notes": "The description says the job reads the day's orders. The Order Database it reads from is inferred."
+    },
+    {
+      "id": "e27",
+      "from": "report_job",
+      "to": "reports_folder",
+      "label": "Summary file",
+      "kind": "file_transfer",
+      "evidence_status": "confirmed",
+      "evidence": "puts a summary file in the Reports Folder"
+    },
+    {
+      "id": "e28",
+      "from": "dashboard",
+      "to": "reports_folder",
+      "label": "Reads reports",
+      "kind": "data",
+      "evidence_status": "confirmed",
+      "evidence": "the dashboard reads them straight from the Reports Folder"
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "big-picture",
+      "title": "The big picture: who uses the shop",
+      "type": "context",
+      "component_ids": [
+        "shopper",
+        "manager",
+        "website",
+        "mobile_app",
+        "dashboard",
+        "store_api",
+        "catalog_db",
+        "payment"
+      ],
+      "connection_ids": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5",
+        "e6",
+        "e9",
+        "e16"
+      ]
+    },
+    {
+      "id": "browse-search",
+      "title": "Signing in, browsing and searching",
+      "type": "container",
+      "component_ids": [
+        "website",
+        "store_api",
+        "google",
+        "book_cache",
+        "catalog_db",
+        "search",
+        "catalog_sync"
+      ],
+      "connection_ids": [
+        "e4",
+        "e7",
+        "e8",
+        "e9",
+        "e10",
+        "e11",
+        "e12"
+      ]
+    },
+    {
+      "id": "checkout",
+      "title": "Checkout: stock check, saving the order, payment",
+      "type": "sequence",
+      "scenario": "A shopper checks out",
+      "component_ids": [
+        "website",
+        "store_api",
+        "inventory",
+        "inventory_db",
+        "order_db",
+        "payment",
+        "stripe"
+      ],
+      "connection_ids": [
+        "e4",
+        "e13",
+        "e14",
+        "e15",
+        "e16",
+        "e17"
+      ]
+    },
+    {
+      "id": "after-payment",
+      "title": "After the payment: shipping, email and stock",
+      "type": "data_flow",
+      "component_ids": [
+        "store_api",
+        "order_queue",
+        "shipping",
+        "email",
+        "inventory",
+        "dhl",
+        "sendgrid",
+        "inventory_db"
+      ],
+      "connection_ids": [
+        "e18",
+        "e19",
+        "e20",
+        "e21",
+        "e22",
+        "e23",
+        "e24",
+        "e25"
+      ]
+    },
+    {
+      "id": "reports",
+      "title": "Nightly reports and managing the shop",
+      "type": "container",
+      "component_ids": [
+        "manager",
+        "dashboard",
+        "store_api",
+        "catalog_db",
+        "report_job",
+        "order_db",
+        "reports_folder"
+      ],
+      "connection_ids": [
+        "e3",
+        "e6",
+        "e9",
+        "e26",
+        "e27",
+        "e28"
+      ]
+    }
+  ],
+  "assumptions": [
+    "Orders are kept in an Order Database. The description says the Store API saves the order and the Sales Report Job reads the day's orders, but it does not say where orders are kept."
+  ],
+  "open_questions": [
+    "Where are orders kept: in a database of their own, or somewhere else?",
+    "How does the Book Cache get filled and refreshed?",
+    "Does Stripe report the payment result straight away, or later?",
+    "Do managers sign in to the Admin Dashboard with Google too, or another way?"
+  ]
+}

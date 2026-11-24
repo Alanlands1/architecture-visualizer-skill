@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1468" height="478" viewBox="0 0 1468 478" font-family="Aptos,Arial,sans-serif">
+<rect width="100%" height="100%" fill="#F7F9FB"/>
+<text x="28" y="38" font-size="22" font-weight="700" fill="#183153">Nightly reports and managing the shop</text>
+<g transform="translate(0.0,58)">
+<path d="M252.0,117.0 C333.5,117.0 333.5,87.0 415.0,87.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="424.0,87.0 412.0,81.5 412.0,92.5" fill="#526579"/>
+<path d="M648.0,54.0 C729.5,54.0 729.5,117.0 811.0,117.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="820.0,117.0 808.0,111.5 808.0,122.5" fill="#526579"/>
+<path d="M1044.0,117.0 C1125.5,117.0 1125.5,193.0 1207.0,193.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="1216.0,193.0 1204.0,187.5 1204.0,198.5" fill="#526579"/>
+<path d="M252.0,236.0 C333.5,236.0 333.5,239.0 415.0,239.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="424.0,239.0 412.0,233.5 412.0,244.5" fill="#526579"/>
+<path d="M252.0,302.0 C338.0,302.0 338.0,345.0 424.0,345.0 L648.0,345.0 C729.5,345.0 729.5,302.0 811.0,302.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="820.0,302.0 808.0,296.5 808.0,307.5" fill="#526579"/>
+<path d="M648.0,120.0 C729.5,120.0 729.5,236.0 811.0,236.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="820.0,236.0 808.0,230.5 808.0,241.5" fill="#526579"/>
+<rect x="28" y="58.0" width="224" height="118" rx="30" fill="#F2F4F7" stroke="#3069A4" stroke-width="2"/>
+<text x="50.0" y="85.0" font-size="15" font-weight="700" fill="#183153">Store Managers</text>
+<text x="50.0" y="104.0" font-size="11" fill="#526579">Actor</text>
+<text x="50.0" y="123.0" font-size="11" fill="#34495E">Staff who run the shop</text>
+<rect x="424" y="28.0" width="224" height="118" rx="10" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="438.0" y="55.0" font-size="15" font-weight="700" fill="#183153">Admin Dashboard</text>
+<text x="438.0" y="74.0" font-size="11" fill="#526579">User Interface</text>
+<text x="438.0" y="93.0" font-size="11" fill="#34495E">Where managers see sales reports</text>
+<text x="438.0" y="107.0" font-size="11" fill="#34495E">and add new books</text>
+<rect x="820" y="58.0" width="224" height="118" rx="10" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="834.0" y="85.0" font-size="15" font-weight="700" fill="#183153">Store API</text>
+<text x="834.0" y="104.0" font-size="11" fill="#526579">Application</text>
+<text x="834.0" y="123.0" font-size="11" fill="#34495E">The one backend behind the</text>
+<text x="834.0" y="137.0" font-size="11" fill="#34495E">website, the app and the</text>
+<text x="834.0" y="151.0" font-size="11" fill="#34495E">dashboard</text>
+<path d="M1216,143.0 A112.0,9 0 0 1 1440,143.0 V243.0 A112.0,9 0 0 1 1216,243.0 Z" fill="#FFF3DF" stroke="#3069A4" stroke-width="2"/>
+<path d="M1216,143.0 A112.0,9 0 0 0 1440,143.0" fill="none" stroke="#3069A4" stroke-width="2"/>
+<text x="1230.0" y="169.0" font-size="15" font-weight="700" fill="#183153">Catalog Database</text>
+<text x="1230.0" y="188.0" font-size="11" fill="#526579">Database</text>
+<text x="1230.0" y="207.0" font-size="11" fill="#34495E">Keeps the full list of books</text>
+<rect x="28" y="210.0" width="224" height="118" rx="10" fill="#E6F4F1" stroke="#3069A4" stroke-width="2"/>
+<text x="42.0" y="237.0" font-size="15" font-weight="700" fill="#183153">Sales Report Job</text>
+<text x="42.0" y="256.0" font-size="11" fill="#526579">Service</text>
+<text x="42.0" y="275.0" font-size="11" fill="#34495E">Builds a sales summary every</text>
+<text x="42.0" y="289.0" font-size="11" fill="#34495E">night</text>
+<path d="M424,189.0 A112.0,9 0 0 1 648,189.0 V289.0 A112.0,9 0 0 1 424,289.0 Z" fill="#FFF3DF" stroke="#B56F1C" stroke-width="2"/>
+<path d="M424,189.0 A112.0,9 0 0 0 648,189.0" fill="none" stroke="#B56F1C" stroke-width="2"/>
+<text x="438.0" y="215.0" font-size="15" font-weight="700" fill="#183153">Order Database</text>
+<text x="438.0" y="234.0" font-size="11" fill="#526579">Database · INFERRED</text>
+<text x="438.0" y="253.0" font-size="11" fill="#34495E">Keeps the saved orders</text>
+<path d="M820,219.0 A112.0,9 0 0 1 1044,219.0 V319.0 A112.0,9 0 0 1 820,319.0 Z" fill="#FFF3DF" stroke="#3069A4" stroke-width="2"/>
+<path d="M820,219.0 A112.0,9 0 0 0 1044,219.0" fill="none" stroke="#3069A4" stroke-width="2"/>
+<text x="834.0" y="245.0" font-size="15" font-weight="700" fill="#183153">Reports Folder</text>
+<text x="834.0" y="264.0" font-size="11" fill="#526579">Database</text>
+<text x="834.0" y="283.0" font-size="11" fill="#34495E">Keeps the nightly summary files</text>
+<rect x="283.8" y="91.0" width="108.4" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="338.0" y="106.0" font-size="11" text-anchor="middle" fill="#183153">1. Runs the shop</text>
+<rect x="692.6" y="85.6" width="114.3" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="749.8" y="100.6" font-size="11" text-anchor="middle" fill="#183153">2. Adds new books</text>
+<rect x="1078.8" y="137.0" width="102.5" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1130.0" y="152.0" font-size="11" text-anchor="middle" fill="#183153">3. Looks up and</text>
+<text x="1130.0" y="166.0" font-size="11" text-anchor="middle" fill="#183153">saves books</text>
+<rect x="305.5" y="220.0" width="96.6" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="353.8" y="235.0" font-size="11" text-anchor="middle" fill="#183153">4. Reads day&#x27;s</text>
+<text x="353.8" y="249.0" font-size="11" text-anchor="middle" fill="#183153">orders</text>
+<rect x="682.8" y="312.5" width="102.5" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="734.0" y="327.5" font-size="11" text-anchor="middle" fill="#183153">5. Summary file</text>
+<rect x="679.8" y="167.0" width="108.4" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="734.0" y="182.0" font-size="11" text-anchor="middle" fill="#183153">6. Reads reports</text>
+</g>
+<text x="28" y="465" font-size="10.5" fill="#526579">Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job</text>
+</svg>
