@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#526579"/></marker></defs>
+<rect width="100%" height="100%" fill="#F7F9FB"/>
+<text x="70" y="38" font-family="Aptos,Arial" font-size="24" font-weight="700" fill="#183153">Customer Management — Logical Architecture</text>
+<path d="M293.75,126.0 C317.25,126.0 317.25,126.0 340.75,126.0" fill="none" stroke="#526579" stroke-width="2.2" marker-end="url(#arr)"/>
+<circle cx="317.25" cy="117.0" r="12" fill="#FFFFFF" stroke="#526579" stroke-width="1.5"/>
+<text x="317.25" y="121.0" text-anchor="middle" font-family="Aptos,Arial" font-size="11" font-weight="700" fill="#183153">1</text>
+<path d="M572.5,126.0 C596.0,126.0 596.0,126.0 619.5,126.0" fill="none" stroke="#526579" stroke-width="2.2" marker-end="url(#arr)"/>
+<circle cx="596.0" cy="117.0" r="12" fill="#FFFFFF" stroke="#526579" stroke-width="1.5"/>
+<text x="596.0" y="121.0" text-anchor="middle" font-family="Aptos,Arial" font-size="11" font-weight="700" fill="#183153">2</text>
+<path d="M851.25,126.0 C874.75,126.0 874.75,126.0 898.25,126.0" fill="none" stroke="#526579" stroke-width="2.2" marker-end="url(#arr)"/>
+<circle cx="874.75" cy="117.0" r="12" fill="#FFFFFF" stroke="#526579" stroke-width="1.5"/>
+<text x="874.75" y="121.0" text-anchor="middle" font-family="Aptos,Arial" font-size="11" font-weight="700" fill="#183153">3</text>
+<rect x="70.0" y="70" width="223.75" height="112" rx="12" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="84.0" y="100" font-family="Aptos,Arial" font-size="17" font-weight="700" fill="#183153">Web Client</text>
+<text x="84.0" y="123" font-family="Aptos,Arial" font-size="12" fill="#526579">User Interface</text>
+<text x="84.0" y="147" font-family="Aptos,Arial" font-size="11" fill="#34495E">Customer-facing web application</text>
+<rect x="348.75" y="70" width="223.75" height="112" rx="12" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="362.75" y="100" font-family="Aptos,Arial" font-size="17" font-weight="700" fill="#183153">Customer API</text>
+<text x="362.75" y="123" font-family="Aptos,Arial" font-size="12" fill="#526579">Application</text>
+<text x="362.75" y="147" font-family="Aptos,Arial" font-size="11" fill="#34495E">Exposes customer REST endpoints</text>
+<rect x="627.5" y="70" width="223.75" height="112" rx="12" fill="#E6F4F1" stroke="#3069A4" stroke-width="2"/>
+<text x="641.5" y="100" font-family="Aptos,Arial" font-size="17" font-weight="700" fill="#183153">Customer Service</text>
+<text x="641.5" y="123" font-family="Aptos,Arial" font-size="12" fill="#526579">Service</text>
+<text x="641.5" y="147" font-family="Aptos,Arial" font-size="11" fill="#34495E">Implements customer business rules</text>
+<rect x="906.25" y="70" width="223.75" height="112" rx="12" fill="#FFF3DF" stroke="#3069A4" stroke-width="2"/>
+<text x="920.25" y="100" font-family="Aptos,Arial" font-size="17" font-weight="700" fill="#183153">Customer Database</text>
+<text x="920.25" y="123" font-family="Aptos,Arial" font-size="12" fill="#526579">Database</text>
+<text x="920.25" y="147" font-family="Aptos,Arial" font-size="11" fill="#34495E">Stores customer records</text>
+<text x="70" y="227" font-family="Aptos,Arial" font-size="14" font-weight="700" fill="#183153">Connection key</text>
+<text x="70" y="251" font-family="Aptos,Arial" font-size="12" fill="#34495E">1. HTTPS / REST — web → api</text>
+<text x="70" y="273" font-family="Aptos,Arial" font-size="12" fill="#34495E">2. Internal call — api → svc</text>
+<text x="70" y="295" font-family="Aptos,Arial" font-size="12" fill="#34495E">3. Read / write — svc → db</text>
+</svg>
