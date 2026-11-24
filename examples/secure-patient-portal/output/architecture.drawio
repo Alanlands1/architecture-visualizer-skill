@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mxfile host="app.diagrams.net" agent="Architecture Visualizer" version="24.7.17" type="device">
+  <diagram id="zones-patient-traffic" name="Zones and patient traffic: from the internet to the data">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1864" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Zones and patient traffic: from the internet to the data" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1808" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_0" value="Internet" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="14" y="58" width="252" height="252" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_1" value="DMZ" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="410" y="58" width="648" height="252" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_2" value="App zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="1202" y="58" width="252" height="252" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_3" value="Data zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="1598" y="58" width="252" height="252" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_patient" value="&lt;b&gt;Patients&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Use the Patient Portal in their browser&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="84" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_edge_fw" value="&lt;b&gt;Edge Firewall&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Firewall&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Only allows HTTPS on port 443 and drops the rest&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FBE9E0;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_1">
+          <mxGeometry x="14" y="84" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_waf" value="&lt;b&gt;WAF&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;WAF&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Blocks common web attacks&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FBE9E0;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_1">
+          <mxGeometry x="410" y="84" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_portal_app" value="&lt;b&gt;Portal App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The Patient Portal application. Stores no passwords.&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="14" y="54" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_patient_db" value="&lt;b&gt;Patient Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Patient records, encrypted on disk&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_3">
+          <mxGeometry x="14" y="84" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e1" value="1. Portal traffic&lt;br&gt;&lt;font color=&quot;#198282&quot;&gt;HTTPS 443 · encrypted&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#198282;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_patient" target="n_edge_fw">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e2" value="2. Allowed traffic" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_edge_fw" target="n_waf">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e3" value="3. Clean requests&lt;br&gt;&lt;font color=&quot;#198282&quot;&gt;HTTPS · encrypted&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#198282;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_waf" target="n_portal_app">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e4" value="4. Patient records&lt;br&gt;&lt;font color=&quot;#198282&quot;&gt;TLS 5432 · encrypted&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#198282;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_portal_app" target="n_patient_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e5" value="5. Direct access&lt;br&gt;&lt;font color=&quot;#AA4141&quot;&gt;BLOCKED&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#AA4141;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_waf" target="n_patient_db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1216" y="277"/>
+              <mxPoint x="1440" y="277"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Teal arrow = encrypted   |   Red arrow = blocked   |   Dashed frame = zone" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="328" width="1808" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="signin-secrets-data" name="Sign-in, secrets and patient data">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Sign-in, secrets and patient data" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1016" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_0" value="Internet" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="14" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_1" value="App zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="410" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_2" value="Data zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="806" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_okta" value="&lt;b&gt;Okta&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Identity Provider&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Cloud service that checks logins and second factors&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E9F5E4;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="130" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_portal_app" value="&lt;b&gt;Portal App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The Patient Portal application. Stores no passwords.&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_1">
+          <mxGeometry x="14" y="130" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_vault" value="&lt;b&gt;Secrets Vault&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Secrets Store&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Keeps the database password&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#E9F5E4;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="14" y="54" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_patient_db" value="&lt;b&gt;Patient Database&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Database&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Patient records, encrypted on disk&lt;/font&gt;" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#FFF3DF;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="14" y="206" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e6" value="1. Checks every login&lt;br&gt;&lt;font color=&quot;#526579&quot;&gt;OIDC&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.50;exitDx=0;exitDy=0;entryX=1;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_portal_app" target="n_okta">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e7" value="2. Fetches database password" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.22;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_portal_app" target="n_vault">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e4" value="3. Patient records&lt;br&gt;&lt;font color=&quot;#198282&quot;&gt;TLS 5432 · encrypted&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#198282;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_portal_app" target="n_patient_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Teal arrow = encrypted   |   Dashed frame = zone" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="420" width="1016" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="admin-access" name="How admins get in">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1468" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="How admins get in" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1412" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_0" value="Internet" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="14" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_1" value="DMZ" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="410" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_2" value="App zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="806" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_3" value="Management zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="1202" y="58" width="252" height="344" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_admin" value="&lt;b&gt;Admins&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Staff who maintain the servers&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="54" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_okta" value="&lt;b&gt;Okta&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Identity Provider&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Cloud service that checks logins and second factors&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E9F5E4;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="206" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_vpn" value="&lt;b&gt;VPN Gateway&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;VPN&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The only way in for admins&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FBE9E0;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_1">
+          <mxGeometry x="14" y="130" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_bastion" value="&lt;b&gt;Bastion Host&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one server admins may start SSH sessions from&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_3">
+          <mxGeometry x="14" y="130" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_portal_app" value="&lt;b&gt;Portal App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The Patient Portal application. Stores no passwords.&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="14" y="100" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e8" value="1. Connects" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_admin" target="n_vpn">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e9" value="2. Checks login and second factor" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.78;exitDx=0;exitDy=0;entryX=1;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_vpn" target="n_okta">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e10" value="3. Admin session" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_vpn" target="n_bastion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="323"/>
+              <mxPoint x="1044" y="323"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_e11" value="4. Server access&lt;br&gt;&lt;font color=&quot;#198282&quot;&gt;SSH 22 · encrypted&lt;/font&gt;" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#198282;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.22;exitDx=0;exitDy=0;entryX=1;entryY=0.50;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_bastion" target="n_portal_app">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Teal arrow = encrypted   |   Dashed frame = zone" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="420" width="1412" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="logging-alerts" name="Logging and alerts">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1864" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Logging and alerts" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#183153;" vertex="1" parent="1">
+          <mxGeometry x="28" y="4" width="1808" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_0" value="DMZ" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="14" y="58" width="252" height="372" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_1" value="App zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="410" y="58" width="252" height="372" as="geometry"/>
+        </mxCell>
+        <mxCell id="z_2" value="Management zone" style="rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#8FA3B8;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;fontSize=13;fontStyle=1;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="806" y="58" width="648" height="372" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_edge_fw" value="&lt;b&gt;Edge Firewall&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Firewall&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Only allows HTTPS on port 443 and drops the rest&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FBE9E0;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="68" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_waf" value="&lt;b&gt;WAF&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;WAF&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Blocks common web attacks&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FBE9E0;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_0">
+          <mxGeometry x="14" y="220" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_portal_app" value="&lt;b&gt;Portal App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Application&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The Patient Portal application. Stores no passwords.&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E8F1FB;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_1">
+          <mxGeometry x="14" y="84" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_bastion" value="&lt;b&gt;Bastion Host&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Service&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;The one server admins may start SSH sessions from&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E6F4F1;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="14" y="54" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_siem" value="&lt;b&gt;Splunk SIEM&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Monitoring&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Collects logs and spots suspicious activity&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#E7EAF2;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="z_2">
+          <mxGeometry x="410" y="144" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_sec_team" value="&lt;b&gt;Security Team&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#526579&quot;&gt;Actor&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#34495E&quot;&gt;Gets the alerts and investigates&lt;/font&gt;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#F2F4F7;strokeColor=#3069A4;strokeWidth=2;fontColor=#183153;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1612" y="202" width="224" height="118" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e12" value="1. Logs" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.59;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_edge_fw" target="n_siem">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="424" y="307"/>
+              <mxPoint x="648" y="307"/>
+              <mxPoint x="820" y="337"/>
+              <mxPoint x="1044" y="337"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_e13" value="2. Logs" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.78;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_waf" target="n_siem">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="424" y="367"/>
+              <mxPoint x="648" y="367"/>
+              <mxPoint x="820" y="397"/>
+              <mxPoint x="1044" y="397"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_e14" value="3. Logs" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.41;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_portal_app" target="n_siem">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="277"/>
+              <mxPoint x="1044" y="277"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_e15" value="4. Logs" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.22;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_bastion" target="n_siem">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_e16" value="5. Alerts" style="html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor=#526579;strokeWidth=2;fontSize=11;fontColor=#183153;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.50;exitDx=0;exitDy=0;entryX=0;entryY=0.50;entryDx=0;entryDy=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n_siem" target="n_sec_team">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Dashed frame = zone" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#526579;" vertex="1" parent="1">
+          <mxGeometry x="28" y="448" width="1808" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

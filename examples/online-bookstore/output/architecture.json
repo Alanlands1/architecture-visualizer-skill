@@ -19,7 +19,6 @@
       "name": "Shoppers",
       "type": "actor",
       "description": "People who browse and buy books",
-      "boundary": "people",
       "evidence_status": "confirmed",
       "evidence": "Shoppers browse and buy books on our website."
     },
@@ -28,7 +27,6 @@
       "name": "Store Managers",
       "type": "actor",
       "description": "Staff who run the shop",
-      "boundary": "people",
       "evidence_status": "confirmed",
       "evidence": "Our store managers do not use the shop itself; they use a separate Admin Dashboard."
     },
@@ -37,7 +35,6 @@
       "name": "Website",
       "type": "user_interface",
       "description": "Where shoppers browse and buy books",
-      "boundary": "screens",
       "evidence_status": "confirmed",
       "evidence": "Shoppers browse and buy books on our website."
     },
@@ -46,7 +43,6 @@
       "name": "Mobile App",
       "type": "user_interface",
       "description": "The same shop on a phone",
-      "boundary": "screens",
       "evidence_status": "confirmed",
       "evidence": "There is also a mobile app that does the same thing."
     },
@@ -55,7 +51,6 @@
       "name": "Admin Dashboard",
       "type": "user_interface",
       "description": "Where managers see sales reports and add new books",
-      "boundary": "screens",
       "evidence_status": "confirmed",
       "evidence": "Store managers open the Admin Dashboard to see those reports. Managers also use the dashboard to add new books."
     },
@@ -64,7 +59,6 @@
       "name": "Store API",
       "type": "application",
       "description": "The one backend behind the website, the app and the dashboard",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "all talk to one backend that we call the Store API"
     },
@@ -73,7 +67,6 @@
       "name": "Google Sign-In",
       "type": "external",
       "description": "Confirms who the shopper is",
-      "boundary": "outside",
       "evidence_status": "confirmed",
       "evidence": "Shoppers sign in with their Google account. The Store API checks each sign-in with Google."
     },
@@ -82,7 +75,6 @@
       "name": "Catalog Database",
       "type": "database",
       "description": "Keeps the full list of books",
-      "boundary": "data",
       "evidence_status": "confirmed",
       "evidence": "The Store API looks up books in the Catalog Database."
     },
@@ -91,7 +83,6 @@
       "name": "Book Cache",
       "type": "database",
       "description": "Redis cache of the most popular books",
-      "boundary": "data",
       "evidence_status": "confirmed",
       "evidence": "The most popular books are also kept in a Redis cache, which we call the Book Cache"
     },
@@ -100,7 +91,6 @@
       "name": "Search Service",
       "type": "service",
       "description": "Finds books quickly when a shopper searches",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "the Store API asks the Search Service, because it is much quicker at finding books"
     },
@@ -109,7 +99,6 @@
       "name": "Catalog Sync Job",
       "type": "service",
       "description": "Copies all books into search every night",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "Every night a Catalog Sync Job reads all the books from the Catalog Database and copies them into the Search Service"
     },
@@ -118,7 +107,6 @@
       "name": "Inventory Service",
       "type": "service",
       "description": "Knows how many copies of each book are in stock",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "The Store API asks the Inventory Service whether the books are in stock."
     },
@@ -127,7 +115,6 @@
       "name": "Inventory Database",
       "type": "database",
       "description": "Keeps the stock numbers",
-      "boundary": "data",
       "evidence_status": "confirmed",
       "evidence": "The Inventory Service keeps stock numbers in its own Inventory Database."
     },
@@ -136,7 +123,6 @@
       "name": "Order Database",
       "type": "database",
       "description": "Keeps the saved orders",
-      "boundary": "data",
       "evidence_status": "inferred",
       "notes": "The Store API saves the order and the Sales Report Job reads the day's orders, so orders must be kept somewhere. The description does not name the storage."
     },
@@ -145,7 +131,6 @@
       "name": "Payment Service",
       "type": "service",
       "description": "Takes the money for an order",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "The Store API asks the Payment Service to take the money."
     },
@@ -154,7 +139,6 @@
       "name": "Stripe",
       "type": "external",
       "description": "Charges the shopper's card",
-      "boundary": "outside",
       "evidence_status": "confirmed",
       "evidence": "The Payment Service uses Stripe to charge the card."
     },
@@ -163,7 +147,6 @@
       "name": "Order Queue",
       "type": "queue",
       "description": "Holds a message for every paid order",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "the Store API puts a message on the Order Queue"
     },
@@ -172,7 +155,6 @@
       "name": "Shipping Service",
       "type": "service",
       "description": "Books deliveries and tracks them",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "The Shipping Service picks up the order and books a delivery"
     },
@@ -181,7 +163,6 @@
       "name": "DHL",
       "type": "external",
       "description": "Courier that delivers the books",
-      "boundary": "outside",
       "evidence_status": "confirmed",
       "evidence": "books a delivery with our courier, DHL"
     },
@@ -190,7 +171,6 @@
       "name": "Email Service",
       "type": "service",
       "description": "Sends the order confirmation email",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "The Email Service sends the shopper a confirmation email"
     },
@@ -199,7 +179,6 @@
       "name": "SendGrid",
       "type": "external",
       "description": "Delivers the email to the shopper",
-      "boundary": "outside",
       "evidence_status": "confirmed",
       "evidence": "sends the shopper a confirmation email through SendGrid"
     },
@@ -208,7 +187,6 @@
       "name": "Sales Report Job",
       "type": "service",
       "description": "Builds a sales summary every night",
-      "boundary": "backend",
       "evidence_status": "confirmed",
       "evidence": "Every night a Sales Report Job reads the day's orders"
     },
@@ -217,7 +195,6 @@
       "name": "Reports Folder",
       "type": "database",
       "description": "Keeps the nightly summary files",
-      "boundary": "data",
       "evidence_status": "confirmed",
       "evidence": "puts a summary file in the Reports Folder"
     }

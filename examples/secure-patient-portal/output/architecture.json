@@ -1,0 +1,395 @@
+{
+  "title": "Northwind Patient Portal: Security Architecture",
+  "subtitle": "Drawn from the plain-English description in description.md",
+  "version": "1.0",
+  "source_documents": [
+    "description.md"
+  ],
+  "summary": "Patients reach the Patient Portal from the internet through an edge firewall and a WAF in the DMZ. The Portal App runs in its own app zone, checks logins with Okta, and is the only thing allowed to reach patient data and secrets in the data zone. Admins come in through a VPN and a bastion host, and every layer sends its logs to Splunk, which alerts the Security Team.",
+  "scope": [
+    "Network zones and what may talk to what",
+    "Patient traffic from the internet to the data",
+    "Sign-in, secrets and patient data",
+    "Admin access",
+    "Logging and alerts"
+  ],
+  "zones": [
+    {
+      "id": "internet",
+      "name": "Internet",
+      "description": "Everything outside the company. Patients are here, and so are attackers."
+    },
+    {
+      "id": "dmz",
+      "name": "DMZ",
+      "description": "The only area the internet is allowed to reach."
+    },
+    {
+      "id": "app",
+      "name": "App zone",
+      "description": "Where the company's own application runs. Not reachable from the internet directly."
+    },
+    {
+      "id": "data",
+      "name": "Data zone",
+      "description": "The most protected area. Only the app zone may talk to it."
+    },
+    {
+      "id": "management",
+      "name": "Management zone",
+      "description": "Where admin and monitoring tools live."
+    }
+  ],
+  "components": [
+    {
+      "id": "patient",
+      "name": "Patients",
+      "type": "actor",
+      "boundary": "internet",
+      "description": "Use the Patient Portal in their browser",
+      "evidence_status": "confirmed",
+      "evidence": "Patients open the Patient Portal in their browser."
+    },
+    {
+      "id": "admin",
+      "name": "Admins",
+      "type": "actor",
+      "boundary": "internet",
+      "description": "Staff who maintain the servers",
+      "evidence_status": "confirmed",
+      "evidence": "Admins never connect to servers straight from the internet."
+    },
+    {
+      "id": "okta",
+      "name": "Okta",
+      "type": "identity_provider",
+      "boundary": "internet",
+      "description": "Cloud service that checks logins and second factors",
+      "evidence_status": "confirmed",
+      "evidence": "It checks every login with Okta, which is a cloud service outside our network"
+    },
+    {
+      "id": "edge_fw",
+      "name": "Edge Firewall",
+      "type": "firewall",
+      "boundary": "dmz",
+      "description": "Only allows HTTPS on port 443 and drops the rest",
+      "evidence_status": "confirmed",
+      "evidence": "the Edge Firewall, which only allows HTTPS on port 443 and drops everything else"
+    },
+    {
+      "id": "waf",
+      "name": "WAF",
+      "type": "waf",
+      "boundary": "dmz",
+      "description": "Blocks common web attacks",
+      "evidence_status": "confirmed",
+      "evidence": "It blocks common web attacks and passes the clean requests on"
+    },
+    {
+      "id": "vpn",
+      "name": "VPN Gateway",
+      "type": "vpn",
+      "boundary": "dmz",
+      "description": "The only way in for admins",
+      "evidence_status": "confirmed",
+      "evidence": "They connect to the VPN Gateway in the DMZ"
+    },
+    {
+      "id": "portal_app",
+      "name": "Portal App",
+      "type": "application",
+      "boundary": "app",
+      "description": "The Patient Portal application. Stores no passwords.",
+      "evidence_status": "confirmed",
+      "evidence": "the Portal App in the app zone. The Portal App does not store passwords."
+    },
+    {
+      "id": "patient_db",
+      "name": "Patient Database",
+      "type": "database",
+      "boundary": "data",
+      "description": "Patient records, encrypted on disk",
+      "evidence_status": "confirmed",
+      "evidence": "the Patient Database, which is in the data zone ... the database is encrypted on disk"
+    },
+    {
+      "id": "vault",
+      "name": "Secrets Vault",
+      "type": "secrets_store",
+      "boundary": "data",
+      "description": "Keeps the database password",
+      "evidence_status": "confirmed",
+      "evidence": "The Portal App fetches it from the Secrets Vault, which is also in the data zone."
+    },
+    {
+      "id": "bastion",
+      "name": "Bastion Host",
+      "type": "service",
+      "boundary": "management",
+      "description": "The one server admins may start SSH sessions from",
+      "evidence_status": "confirmed",
+      "evidence": "From the VPN they land on the Bastion Host in the management zone."
+    },
+    {
+      "id": "siem",
+      "name": "Splunk SIEM",
+      "type": "monitoring",
+      "boundary": "management",
+      "description": "Collects logs and spots suspicious activity",
+      "evidence_status": "confirmed",
+      "evidence": "send their logs to our SIEM, which is Splunk, in the management zone"
+    },
+    {
+      "id": "sec_team",
+      "name": "Security Team",
+      "type": "actor",
+      "description": "Gets the alerts and investigates",
+      "evidence_status": "confirmed",
+      "evidence": "When Splunk sees something suspicious it alerts the Security Team."
+    }
+  ],
+  "connections": [
+    {
+      "id": "e1",
+      "from": "patient",
+      "to": "edge_fw",
+      "label": "Portal traffic",
+      "kind": "synchronous",
+      "protocol": "HTTPS",
+      "port": 443,
+      "encrypted": true,
+      "evidence_status": "confirmed",
+      "evidence": "Their traffic first hits the Edge Firewall, which only allows HTTPS on port 443"
+    },
+    {
+      "id": "e2",
+      "from": "edge_fw",
+      "to": "waf",
+      "label": "Allowed traffic",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "Behind the firewall is a WAF"
+    },
+    {
+      "id": "e3",
+      "from": "waf",
+      "to": "portal_app",
+      "label": "Clean requests",
+      "kind": "synchronous",
+      "protocol": "HTTPS",
+      "encrypted": true,
+      "evidence_status": "confirmed",
+      "evidence": "passes the clean requests on to the Portal App in the app zone, again over HTTPS"
+    },
+    {
+      "id": "e4",
+      "from": "portal_app",
+      "to": "patient_db",
+      "label": "Patient records",
+      "kind": "data",
+      "protocol": "TLS",
+      "port": 5432,
+      "encrypted": true,
+      "evidence_status": "confirmed",
+      "evidence": "That connection uses TLS on port 5432"
+    },
+    {
+      "id": "e5",
+      "from": "waf",
+      "to": "patient_db",
+      "label": "Direct access",
+      "kind": "data",
+      "blocked": true,
+      "evidence_status": "confirmed",
+      "evidence": "Nothing in the DMZ is ever allowed to talk to the data zone. If the WAF tried to reach the Patient Database, it would be blocked."
+    },
+    {
+      "id": "e6",
+      "from": "portal_app",
+      "to": "okta",
+      "label": "Checks every login",
+      "kind": "synchronous",
+      "protocol": "OIDC",
+      "evidence_status": "confirmed",
+      "evidence": "It checks every login with Okta ... using OIDC."
+    },
+    {
+      "id": "e7",
+      "from": "portal_app",
+      "to": "vault",
+      "label": "Fetches database password",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Portal App fetches it from the Secrets Vault"
+    },
+    {
+      "id": "e8",
+      "from": "admin",
+      "to": "vpn",
+      "label": "Connects",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "They connect to the VPN Gateway in the DMZ"
+    },
+    {
+      "id": "e9",
+      "from": "vpn",
+      "to": "okta",
+      "label": "Checks login and second factor",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "which checks their login and second factor with Okta"
+    },
+    {
+      "id": "e10",
+      "from": "vpn",
+      "to": "bastion",
+      "label": "Admin session",
+      "kind": "synchronous",
+      "evidence_status": "confirmed",
+      "evidence": "From the VPN they land on the Bastion Host in the management zone."
+    },
+    {
+      "id": "e11",
+      "from": "bastion",
+      "to": "portal_app",
+      "label": "Server access",
+      "kind": "synchronous",
+      "protocol": "SSH",
+      "port": 22,
+      "encrypted": true,
+      "evidence_status": "confirmed",
+      "evidence": "From the Bastion Host they can open an SSH session (port 22) to the Portal App servers."
+    },
+    {
+      "id": "e12",
+      "from": "edge_fw",
+      "to": "siem",
+      "label": "Logs",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Edge Firewall, the WAF, the Portal App and the Bastion Host all send their logs to our SIEM"
+    },
+    {
+      "id": "e13",
+      "from": "waf",
+      "to": "siem",
+      "label": "Logs",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Edge Firewall, the WAF, the Portal App and the Bastion Host all send their logs to our SIEM"
+    },
+    {
+      "id": "e14",
+      "from": "portal_app",
+      "to": "siem",
+      "label": "Logs",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Edge Firewall, the WAF, the Portal App and the Bastion Host all send their logs to our SIEM"
+    },
+    {
+      "id": "e15",
+      "from": "bastion",
+      "to": "siem",
+      "label": "Logs",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "The Edge Firewall, the WAF, the Portal App and the Bastion Host all send their logs to our SIEM"
+    },
+    {
+      "id": "e16",
+      "from": "siem",
+      "to": "sec_team",
+      "label": "Alerts",
+      "kind": "asynchronous",
+      "evidence_status": "confirmed",
+      "evidence": "When Splunk sees something suspicious it alerts the Security Team."
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "zones-patient-traffic",
+      "title": "Zones and patient traffic: from the internet to the data",
+      "type": "context",
+      "component_ids": [
+        "patient",
+        "edge_fw",
+        "waf",
+        "portal_app",
+        "patient_db"
+      ],
+      "connection_ids": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5"
+      ]
+    },
+    {
+      "id": "signin-secrets-data",
+      "title": "Sign-in, secrets and patient data",
+      "type": "container",
+      "component_ids": [
+        "okta",
+        "portal_app",
+        "vault",
+        "patient_db"
+      ],
+      "connection_ids": [
+        "e6",
+        "e7",
+        "e4"
+      ]
+    },
+    {
+      "id": "admin-access",
+      "title": "How admins get in",
+      "type": "sequence",
+      "scenario": "An admin needs to work on a Portal App server",
+      "component_ids": [
+        "admin",
+        "okta",
+        "vpn",
+        "bastion",
+        "portal_app"
+      ],
+      "connection_ids": [
+        "e8",
+        "e9",
+        "e10",
+        "e11"
+      ]
+    },
+    {
+      "id": "logging-alerts",
+      "title": "Logging and alerts",
+      "type": "data_flow",
+      "component_ids": [
+        "edge_fw",
+        "waf",
+        "portal_app",
+        "bastion",
+        "siem",
+        "sec_team"
+      ],
+      "connection_ids": [
+        "e12",
+        "e13",
+        "e14",
+        "e15",
+        "e16"
+      ]
+    }
+  ],
+  "assumptions": [],
+  "open_questions": [
+    "Is the link from the VPN Gateway to the Bastion Host encrypted, and on which port?",
+    "Is the link from the Portal App to the Secrets Vault encrypted?",
+    "Do the Patient Database and the Secrets Vault send logs to Splunk too?",
+    "How does the Security Team receive alerts: email, paging, or a dashboard?",
+    "Which firewall enforces the rule that the DMZ may not talk to the data zone?"
+  ]
+}

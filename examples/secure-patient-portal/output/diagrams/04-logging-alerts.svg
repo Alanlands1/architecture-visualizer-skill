@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1864" height="480" viewBox="0 0 1864 480" font-family="Aptos,Arial,sans-serif">
+<rect width="100%" height="100%" fill="#F7F9FB"/>
+<text x="28" y="38" font-size="22" font-weight="700" fill="#183153">Logging and alerts</text>
+<g transform="translate(0.0,58)">
+<rect x="14" y="8" width="252" height="372" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="26" y="30" font-size="13" font-weight="700" fill="#526579">DMZ</text>
+<rect x="410" y="8" width="252" height="372" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="422" y="30" font-size="13" font-weight="700" fill="#526579">App zone</text>
+<rect x="806" y="8" width="648" height="372" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="818" y="30" font-size="13" font-weight="700" fill="#526579">Management zone</text>
+<path d="M252.0,135.0 C338.0,135.0 338.0,257.0 424.0,257.0 L648.0,257.0 C734.0,257.0 734.0,287.0 820.0,287.0 L1044.0,287.0 C1125.5,287.0 1125.5,222.0 1207.0,222.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="1216.0,222.0 1204.0,216.5 1204.0,227.5" fill="#526579"/>
+<path d="M252.0,287.0 C338.0,287.0 338.0,317.0 424.0,317.0 L648.0,317.0 C734.0,317.0 734.0,347.0 820.0,347.0 L1044.0,347.0 C1125.5,347.0 1125.5,244.0 1207.0,244.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="1216.0,244.0 1204.0,238.5 1204.0,249.5" fill="#526579"/>
+<path d="M648.0,151.0 C734.0,151.0 734.0,227.0 820.0,227.0 L1044.0,227.0 C1125.5,227.0 1125.5,200.0 1207.0,200.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="1216.0,200.0 1204.0,194.5 1204.0,205.5" fill="#526579"/>
+<path d="M1044.0,121.0 C1125.5,121.0 1125.5,178.0 1207.0,178.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="1216.0,178.0 1204.0,172.5 1204.0,183.5" fill="#526579"/>
+<path d="M1440.0,211.0 L1603.0,211.0" fill="none" stroke="#526579" stroke-width="2" stroke-dasharray="7 5"/>
+<polygon points="1612.0,211.0 1600.0,205.5 1600.0,216.5" fill="#526579"/>
+<polygon points="44.0,76.0 236.0,76.0 252.0,135.0 236.0,194.0 44.0,194.0 28.0,135.0" fill="#FBE9E0" stroke="#3069A4" stroke-width="2" stroke-linejoin="round"/>
+<text x="54.0" y="103.0" font-size="15" font-weight="700" fill="#183153">Edge Firewall</text>
+<text x="54.0" y="122.0" font-size="11" fill="#526579">Firewall</text>
+<text x="54.0" y="141.0" font-size="11" fill="#34495E">Only allows HTTPS on port</text>
+<text x="54.0" y="155.0" font-size="11" fill="#34495E">443 and drops the rest</text>
+<polygon points="44.0,228.0 236.0,228.0 252.0,287.0 236.0,346.0 44.0,346.0 28.0,287.0" fill="#FBE9E0" stroke="#3069A4" stroke-width="2" stroke-linejoin="round"/>
+<text x="54.0" y="255.0" font-size="15" font-weight="700" fill="#183153">WAF</text>
+<text x="54.0" y="274.0" font-size="11" fill="#526579">WAF</text>
+<text x="54.0" y="293.0" font-size="11" fill="#34495E">Blocks common web attacks</text>
+<rect x="424" y="92.0" width="224" height="118" rx="10" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="438.0" y="119.0" font-size="15" font-weight="700" fill="#183153">Portal App</text>
+<text x="438.0" y="138.0" font-size="11" fill="#526579">Application</text>
+<text x="438.0" y="157.0" font-size="11" fill="#34495E">The Patient Portal application.</text>
+<text x="438.0" y="171.0" font-size="11" fill="#34495E">Stores no passwords.</text>
+<rect x="820" y="62.0" width="224" height="118" rx="10" fill="#E6F4F1" stroke="#3069A4" stroke-width="2"/>
+<text x="834.0" y="89.0" font-size="15" font-weight="700" fill="#183153">Bastion Host</text>
+<text x="834.0" y="108.0" font-size="11" fill="#526579">Service</text>
+<text x="834.0" y="127.0" font-size="11" fill="#34495E">The one server admins may start</text>
+<text x="834.0" y="141.0" font-size="11" fill="#34495E">SSH sessions from</text>
+<rect x="1216" y="152.0" width="224" height="118" rx="10" fill="#E7EAF2" stroke="#3069A4" stroke-width="2"/>
+<text x="1230.0" y="179.0" font-size="15" font-weight="700" fill="#183153">Splunk SIEM</text>
+<text x="1230.0" y="198.0" font-size="11" fill="#526579">Monitoring</text>
+<text x="1230.0" y="217.0" font-size="11" fill="#34495E">Collects logs and spots</text>
+<text x="1230.0" y="231.0" font-size="11" fill="#34495E">suspicious activity</text>
+<rect x="1612" y="152.0" width="224" height="118" rx="30" fill="#F2F4F7" stroke="#3069A4" stroke-width="2"/>
+<text x="1634.0" y="179.0" font-size="15" font-weight="700" fill="#183153">Security Team</text>
+<text x="1634.0" y="198.0" font-size="11" fill="#526579">Actor</text>
+<text x="1634.0" y="217.0" font-size="11" fill="#34495E">Gets the alerts and investigates</text>
+<rect x="690.6" y="255.7" width="55.3" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="718.2" y="270.7" font-size="11" text-anchor="middle" fill="#183153">1. Logs</text>
+<rect x="690.6" y="315.7" width="55.3" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="718.2" y="330.7" font-size="11" text-anchor="middle" fill="#183153">2. Logs</text>
+<rect x="1086.6" y="207.3" width="55.3" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1114.2" y="222.3" font-size="11" text-anchor="middle" fill="#183153">3. Logs</text>
+<rect x="1086.6" y="128.4" width="55.3" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1114.2" y="143.4" font-size="11" text-anchor="middle" fill="#183153">4. Logs</text>
+<rect x="1492.5" y="200.0" width="67.1" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1526.0" y="215.0" font-size="11" text-anchor="middle" fill="#183153">5. Alerts</text>
+</g>
+<text x="28" y="467" font-size="10.5" fill="#526579">Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Dashed frame = zone</text>
+</svg>

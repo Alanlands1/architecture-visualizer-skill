@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1468" height="452" viewBox="0 0 1468 452" font-family="Aptos,Arial,sans-serif">
+<rect width="100%" height="100%" fill="#F7F9FB"/>
+<text x="28" y="38" font-size="22" font-weight="700" fill="#183153">How admins get in</text>
+<g transform="translate(0.0,58)">
+<rect x="14" y="8" width="252" height="344" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="26" y="30" font-size="13" font-weight="700" fill="#526579">Internet</text>
+<rect x="410" y="8" width="252" height="344" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="422" y="30" font-size="13" font-weight="700" fill="#526579">DMZ</text>
+<rect x="806" y="8" width="252" height="344" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="818" y="30" font-size="13" font-weight="700" fill="#526579">App zone</text>
+<rect x="1202" y="8" width="252" height="344" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="1214" y="30" font-size="13" font-weight="700" fill="#526579">Management zone</text>
+<path d="M252.0,121.0 C338.0,121.0 338.0,164.0 424.0,164.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="433.0,164.0 421.0,158.5 421.0,169.5" fill="#526579"/>
+<path d="M433.0,230.0 C347.0,230.0 347.0,273.0 261.0,273.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="252.0,273.0 264.0,267.5 264.0,278.5" fill="#526579"/>
+<path d="M648.0,197.0 C734.0,197.0 734.0,273.0 820.0,273.0 L1044.0,273.0 C1125.5,273.0 1125.5,230.0 1207.0,230.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="1216.0,230.0 1204.0,224.5 1204.0,235.5" fill="#526579"/>
+<path d="M1216.0,164.0 C1134.5,164.0 1134.5,167.0 1053.0,167.0" fill="none" stroke="#198282" stroke-width="2"/>
+<polygon points="1044.0,167.0 1056.0,161.5 1056.0,172.5" fill="#198282"/>
+<rect x="28" y="62.0" width="224" height="118" rx="30" fill="#F2F4F7" stroke="#3069A4" stroke-width="2"/>
+<text x="50.0" y="89.0" font-size="15" font-weight="700" fill="#183153">Admins</text>
+<text x="50.0" y="108.0" font-size="11" fill="#526579">Actor</text>
+<text x="50.0" y="127.0" font-size="11" fill="#34495E">Staff who maintain the servers</text>
+<rect x="28" y="214.0" width="224" height="118" rx="10" fill="#E9F5E4" stroke="#3069A4" stroke-width="2"/>
+<text x="42.0" y="241.0" font-size="15" font-weight="700" fill="#183153">Okta</text>
+<text x="42.0" y="260.0" font-size="11" fill="#526579">Identity Provider</text>
+<text x="42.0" y="279.0" font-size="11" fill="#34495E">Cloud service that checks logins</text>
+<text x="42.0" y="293.0" font-size="11" fill="#34495E">and second factors</text>
+<polygon points="440.0,138.0 632.0,138.0 648.0,197.0 632.0,256.0 440.0,256.0 424.0,197.0" fill="#FBE9E0" stroke="#3069A4" stroke-width="2" stroke-linejoin="round"/>
+<text x="450.0" y="165.0" font-size="15" font-weight="700" fill="#183153">VPN Gateway</text>
+<text x="450.0" y="184.0" font-size="11" fill="#526579">VPN</text>
+<text x="450.0" y="203.0" font-size="11" fill="#34495E">The only way in for admins</text>
+<rect x="1216" y="138.0" width="224" height="118" rx="10" fill="#E6F4F1" stroke="#3069A4" stroke-width="2"/>
+<text x="1230.0" y="165.0" font-size="15" font-weight="700" fill="#183153">Bastion Host</text>
+<text x="1230.0" y="184.0" font-size="11" fill="#526579">Service</text>
+<text x="1230.0" y="203.0" font-size="11" fill="#34495E">The one server admins may start</text>
+<text x="1230.0" y="217.0" font-size="11" fill="#34495E">SSH sessions from</text>
+<rect x="820" y="108.0" width="224" height="118" rx="10" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="834.0" y="135.0" font-size="15" font-weight="700" fill="#183153">Portal App</text>
+<text x="834.0" y="154.0" font-size="11" fill="#526579">Application</text>
+<text x="834.0" y="173.0" font-size="11" fill="#34495E">The Patient Portal application.</text>
+<text x="834.0" y="187.0" font-size="11" fill="#34495E">Stores no passwords.</text>
+<rect x="286.4" y="123.9" width="78.9" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="325.9" y="138.9" font-size="11" text-anchor="middle" fill="#183153">1. Connects</text>
+<rect x="262.8" y="241.1" width="126.1" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="325.9" y="256.1" font-size="11" text-anchor="middle" fill="#183153">2. Checks login and</text>
+<text x="325.9" y="270.1" font-size="11" text-anchor="middle" fill="#183153">second factor</text>
+<rect x="1060.0" y="248.1" width="108.4" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1114.2" y="263.1" font-size="11" text-anchor="middle" fill="#183153">3. Admin session</text>
+<rect x="1054.1" y="148.0" width="120.2" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1114.2" y="163.0" font-size="11" text-anchor="middle" fill="#183153">4. Server access</text>
+<text x="1114.2" y="177.0" font-size="11" text-anchor="middle" fill="#198282">SSH 22 · encrypted</text>
+</g>
+<text x="28" y="439" font-size="10.5" fill="#526579">Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Teal arrow = encrypted   |   Dashed frame = zone</text>
+</svg>

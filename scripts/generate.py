@@ -10,21 +10,30 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.dom import minidom
 
 NAVY = "#183153"; BLUE = "#3069A4"; GREY = "#526579"; TEXT = "#34495E"
-CANVAS = "#F7F9FB"; WHITE = "#FFFFFF"; AMBER = "#B56F1C"; RED = "#AA4141"
+CANVAS = "#F7F9FB"; WHITE = "#FFFFFF"; AMBER = "#B56F1C"; RED = "#AA4141"; TEAL = "#198282"
+ZONE_LINE = "#8FA3B8"
 TYPE_FILL = {"user_interface": "#E8F1FB", "application": "#E8F1FB", "service": "#E6F4F1",
-             "database": "#FFF3DF", "external": "#F0ECF8", "queue": "#FCEBEC", "actor": "#F2F4F7"}
+             "database": "#FFF3DF", "external": "#F0ECF8", "queue": "#FCEBEC", "actor": "#F2F4F7",
+             "gateway": "#E8F1FB", "load_balancer": "#E8F1FB",
+             "firewall": "#FBE9E0", "waf": "#FBE9E0", "vpn": "#FBE9E0",
+             "identity_provider": "#E9F5E4", "secrets_store": "#E9F5E4", "monitoring": "#E7EAF2"}
+TYPE_SHAPE = {"database": "cylinder", "secrets_store": "cylinder", "actor": "pill",
+              "firewall": "hexagon", "waf": "hexagon", "vpn": "hexagon"}
+TYPE_NAME = {"waf": "WAF", "vpn": "VPN"}
+HEX_INSET = 16
 DEFAULT_FILL = "#EAF0F6"
 STATUS_BORDER = {"confirmed": BLUE, "inferred": AMBER, "unknown": RED}
 # Interactions the sender does not wait for are drawn dashed.
 DASHED_KINDS = {"asynchronous", "event", "batch", "file_transfer"}
-LEGEND = ("Border: blue = stated, amber = inferred, red = unknown   |   "
-          "Solid arrow = direct request or data access   |   "
-          "Dashed arrow = message, event, file or scheduled job")
+LEGEND_BASE = ["Border: blue = stated, amber = inferred, red = unknown",
+               "Solid arrow = direct request or data access",
+               "Dashed arrow = message, event, file or scheduled job"]
 
 # Layout sizes in drawing units. 100 units = 1 inch in PowerPoint.
 BOX_W, BOX_H, GAP_X, GAP_Y, LANE_H, MARGIN = 224, 118, 172, 34, 26, 28
 LABEL_CHARS = 19  # label lines stay narrower than the gap, so the arrow shows on both sides
-HEADER_H, FOOTER_H = 58, 34
+HEADER_H = 58
+ZONE_HEAD, ZONE_PAD = 34, 14
 
 
 def clean(s):
@@ -42,7 +51,80 @@ def status_label(obj):
 
 
 def type_label(comp):
-    return clean(comp.get("type") or "component").replace("_", " ").title()
+    kind = clean(comp.get("type") or "component")
+    return TYPE_NAME.get(kind, kind.replace("_", " ").title())
+
+
+def legend_parts(scene):
+    parts = list(LEGEND_BASE)
+    if any(a["encrypted"] for a in scene["arrows"]):
+        parts.append("Teal arrow = encrypted")
+    if any(a["blocked"] for a in scene["arrows"]):
+        parts.append("Red arrow = blocked")
+    if scene["zones"]:
+        parts.append("Dashed frame = zone")
+    return parts
+
+
+def legend_lines(scene, width):
+    """Pack the legend into as few lines as fit the picture width."""
+    room, lines = max(40, int((width - 2 * MARGIN) / 5.4)), []
+    for part in legend_parts(scene):
+        if lines and len(lines[-1]) + len(part) + 7 <= room:
+            lines[-1] += "   |   " + part
+        else:
+            lines.append(part)
+    return lines
+
+
+def footer_height(scene, width):
+    return 20 + 14 * len(legend_lines(scene, width))
+
+
+def flow_columns(ids, links):
+    """Give each id a column that follows the arrows. links are (from, to) pairs.
+
+    Returns the column of every id and the indexes of links that close a loop
+    (those are laid out backwards, then drawn pointing the right way).
+    """
+    out = {i: [] for i in ids}
+    for k, (u, v) in enumerate(links):
+        out[u].append(k)
+    state, flipped = {}, set()
+
+    def visit(u):
+        state[u] = 1
+        for k in out[u]:
+            v = links[k][1]
+            if state.get(v) == 1:
+                flipped.add(k)
+            elif v not in state:
+                visit(v)
+        state[u] = 2
+
+    for i in ids:
+        if i not in state:
+            visit(i)
+    pairs = [(v, u) if k in flipped else (u, v) for k, (u, v) in enumerate(links)]
+    col = {i: 0 for i in ids}
+    for _ in ids:  # column = longest chain of arrows leading to the box
+        changed = False
+        for u, v in pairs:
+            if col[v] < col[u] + 1:
+                col[v] = col[u] + 1
+                changed = True
+        if not changed:
+            break
+    succ = {i: [] for i in ids}
+    pred = {i: [] for i in ids}
+    for u, v in pairs:
+        succ[u].append(v)
+        pred[v].append(u)
+    for i in ids:  # a box nothing points to sits right before what it points to
+        if not pred[i] and succ[i]:
+            col[i] = min(col[v] for v in succ[i]) - 1
+    used = sorted(set(col.values()))
+    return {i: used.index(c) for i, c in col.items()}, flipped
 
 
 def wrap(text, width, max_lines):
@@ -70,54 +152,49 @@ def load_views(model):
 
 # --------------------------------------------------------------------------- layout
 
-def build_scene(comps, conns):
-    """Place boxes in columns that follow the arrows, and route every arrow between them."""
+def build_scene(comps, conns, zone_defs=None, show_zones=True):
+    """Place boxes in columns that follow the arrows, keep each zone together, and route every arrow."""
     ids = [c["id"] for c in comps]
     idset = set(ids)
     edges = [e for e in conns if e.get("from") in idset and e.get("to") in idset and e["from"] != e["to"]]
+    links = [(e["from"], e["to"]) for e in edges]
 
-    # 1. Arrows that close a loop are laid out backwards, then drawn pointing the right way.
-    out = {i: [] for i in ids}
-    for k, e in enumerate(edges):
-        out[e["from"]].append(k)
-    state, flipped = {}, set()
-
-    def visit(u):
-        state[u] = 1
-        for k in out[u]:
-            v = edges[k]["to"]
-            if state.get(v) == 1:
-                flipped.add(k)
-            elif v not in state:
-                visit(v)
-        state[u] = 2
-
+    # 1. Zones. Each zone gets its own run of columns, so its frame never overlaps another.
+    zone_info = {}
+    for z in zone_defs or []:
+        for key in (z.get("id"), z.get("name")):
+            if key:
+                zone_info[clean(key).lower()] = z
+    zone_of = {c["id"]: (clean(c.get("boundary")).lower() or None) if show_zones else None for c in comps}
+    natural, _ = flow_columns(ids, links)
+    groups = []
     for i in ids:
-        if i not in state:
-            visit(i)
-    pairs = [(e["to"], e["from"]) if k in flipped else (e["from"], e["to"]) for k, e in enumerate(edges)]
+        if zone_of[i] not in groups:
+            groups.append(zone_of[i])
+    members = {g: [i for i in ids if zone_of[i] == g] for g in groups}
+    first = {g: n for n, g in enumerate(groups)}
+    groups.sort(key=lambda g: (sum(natural[i] for i in members[g]) / len(members[g]), first[g]))
+    listed = [clean(z.get("id") or z.get("name")).lower() for z in zone_defs or []]
+    slots = [n for n, g in enumerate(groups) if g in listed]  # zones named in the model keep that order
+    for n, g in zip(slots, sorted((groups[n] for n in slots), key=listed.index)):
+        groups[n] = g
 
-    # 2. Column of each box = longest chain of arrows leading to it.
-    col = {i: 0 for i in ids}
-    for _ in ids:
-        changed = False
-        for u, v in pairs:
-            if col[v] < col[u] + 1:
-                col[v] = col[u] + 1
-                changed = True
-        if not changed:
-            break
-    succ = {i: [] for i in ids}
-    pred = {i: [] for i in ids}
-    for u, v in pairs:
-        succ[u].append(v)
-        pred[v].append(u)
-    for i in ids:  # a box nothing points to sits right before what it points to
-        if not pred[i] and succ[i]:
-            col[i] = min(col[v] for v in succ[i]) - 1
-    used = sorted(set(col.values()))
-    col = {i: used.index(c) for i, c in col.items()}
-    n_cols = len(used) or 1
+    # 2. Columns: inside a zone follow the arrows; zones follow each other left to right.
+    col, flipped, span, start = {}, set(), {}, 0
+    for g in groups:
+        inside = [k for k, (u, v) in enumerate(links) if zone_of[u] == g and zone_of[v] == g]
+        local, loops = flow_columns(members[g], [links[k] for k in inside])
+        flipped |= {inside[j] for j in loops}
+        for i in members[g]:
+            col[i] = start + local[i]
+        width = max(local.values()) + 1
+        span[g] = (start, start + width - 1)
+        start += width
+    for k, (u, v) in enumerate(links):
+        if zone_of[u] != zone_of[v] and col[u] > col[v]:
+            flipped.add(k)
+    pairs = [(v, u) if k in flipped else (u, v) for k, (u, v) in enumerate(links)]
+    n_cols = start or 1
 
     # 3. Arrows that skip columns get a lane of their own in each column they pass.
     cols = [[] for _ in range(n_cols)]
@@ -159,12 +236,14 @@ def build_scene(comps, conns):
     col_h = [sum(height(n) for n in c) + GAP_Y * (len(c) - 1) for c in cols]
     inner_h = max(col_h + [BOX_H])
     width = 2 * MARGIN + n_cols * BOX_W + (n_cols - 1) * GAP_X
-    total_h = 2 * MARGIN + inner_h
+    named = [g for g in groups if g]
+    top = MARGIN + (ZONE_HEAD if named else 0)
+    total_h = top + inner_h + MARGIN
     pos = {}
-    for c, members in enumerate(cols):
+    for c, col_members in enumerate(cols):
         x = MARGIN + c * (BOX_W + GAP_X)
-        y = MARGIN + (inner_h - col_h[c]) / 2
-        for n in members:
+        y = top + (inner_h - col_h[c]) / 2
+        for n in col_members:
             pos[n] = (x, y, height(n))
             y += height(n) + GAP_Y
 
@@ -184,44 +263,68 @@ def build_scene(comps, conns):
                 frac = 0.5 if len(ks) == 1 else 0.22 + 0.56 * j / (len(ks) - 1)
                 port[(side, k)] = frac
 
-    boxes = []
+    zones = []
+    for g in named:
+        z = zone_info.get(g, {})
+        label = clean(z.get("name")) or next(clean(c.get("boundary")) for c in comps if zone_of[c["id"]] == g)
+        if label == label.lower():
+            label = label.replace("_", " ").replace("-", " ").title()
+        x0 = MARGIN + span[g][0] * (BOX_W + GAP_X) - ZONE_PAD
+        x1 = MARGIN + span[g][1] * (BOX_W + GAP_X) + BOX_W + ZONE_PAD
+        zones.append({"id": g, "name": label, "title": (wrap(label, (x1 - x0 - 24) / 7.2, 1) or [""])[0],
+                      "description": clean(z.get("description")), "members": members[g],
+                      "x": x0, "y": 8, "w": x1 - x0, "h": total_h - 16})
+
+    boxes, shape_of = [], {}
     for c in comps:
         x, y, _ = pos[c["id"]]
-        long_name = len(clean(c.get("name"))) > 23
-        name_lines = wrap(c.get("name"), 26 if long_name else 23, 2 if long_name else 1)
-        shape = {"database": "cylinder", "actor": "pill"}.get(c.get("type"), "box")
-        desc_lines = wrap(c.get("description"), 33, 2 if (len(name_lines) > 1 or shape == "cylinder") else 3)
+        shape = TYPE_SHAPE.get(c.get("type"), "box")
+        shape_of[c["id"]] = shape
+        name_room = 20 if shape == "hexagon" else 23
+        long_name = len(clean(c.get("name"))) > name_room
+        name_lines = wrap(c.get("name"), name_room + 3 if long_name else name_room, 2 if long_name else 1)
+        desc_lines = wrap(c.get("description"), 28 if shape == "hexagon" else 33,
+                          2 if (len(name_lines) > 1 or shape == "cylinder") else 3)
         st = status_of(c)
-        boxes.append({"id": c["id"], "x": x, "y": y, "w": BOX_W, "h": BOX_H, "shape": shape,
+        boxes.append({"id": c["id"], "x": x, "y": y, "w": BOX_W, "h": BOX_H, "shape": shape, "zone": zone_of[c["id"]],
                       "fill": TYPE_FILL.get(c.get("type"), DEFAULT_FILL), "border": STATUS_BORDER[st],
                       "name": clean(c.get("name")), "name_lines": name_lines, "name_size": 13 if long_name else 15,
                       "type_line": type_label(c) + ("" if st == "confirmed" else " · " + st.upper()),
                       "desc": clean(c.get("description")), "desc_lines": desc_lines, "tag": status_label(c)})
+
+    def side_inset(node, frac):  # a hexagon's sides slope inwards away from the middle
+        return HEX_INSET * abs(frac - 0.5) * 2 if shape_of.get(node) == "hexagon" else 0
 
     arrows = []
     for k, e in enumerate(edges):
         chain = chains[k]
         x0, y0, _ = pos[chain[0]]
         x1, y1, _ = pos[chain[-1]]
-        pts = [(x0 + BOX_W, y0 + BOX_H * port[("out", k)])]
+        pts = [(x0 + BOX_W - side_inset(chain[0], port[("out", k)]), y0 + BOX_H * port[("out", k)])]
         for lane in chain[1:-1]:
             pts += [(pos[lane][0], mid_y(lane)), (pos[lane][0] + BOX_W, mid_y(lane))]
-        pts.append((x1, y1 + BOX_H * port[("in", k)]))
+        pts.append((x1 + side_inset(chain[-1], port[("in", k)]), y1 + BOX_H * port[("in", k)]))
         seg = 2 * ((len(pts) // 2) // 2)  # the gap nearest the middle of the arrow
-        lines = wrap(f"{k + 1}. {clean(e.get('label'))}", LABEL_CHARS, 3)
+        blocked, encrypted = bool(e.get("blocked")), bool(e.get("encrypted"))
+        color = RED if blocked else TEAL if encrypted else GREY
+        detail = " · ".join(x for x in (" ".join(clean(e.get(f)) for f in ("protocol", "port") if e.get(f)),
+                                        "encrypted" if encrypted else "", "BLOCKED" if blocked else "") if x)
+        lines = [(s, NAVY) for s in wrap(f"{k + 1}. {clean(e.get('label'))}", LABEL_CHARS, 3)]
+        lines += [(s, color) for s in wrap(detail, LABEL_CHARS, 2)]
         # Sit the label where the arrows are furthest apart: near the end that fans out most.
         fan_out, fan_in = len(leaving[chain[0]]), len(entering[chain[-1]])
         t = 0.62 if fan_out > fan_in else 0.38 if fan_in > fan_out else 0.5
         (px, py), (qx, qy) = pts[seg], pts[seg + 1]
         label = {"x": px + (qx - px) * ((1 - t) ** 3 * 0 + 1.5 * t * (1 - t) + t ** 3),
                  "y": py + (qy - py) * (3 * t * t - 2 * t ** 3),
-                 "w": max(len(s) for s in lines) * 5.9 + 14, "h": len(lines) * 14 + 8, "lines": lines,
+                 "w": max(len(s) for s, _ in lines) * 5.9 + 14, "h": len(lines) * 14 + 8, "lines": lines,
                  "gap": col[pairs[k][0]] + seg // 2}
         if k in flipped:
             pts.reverse()
         arrows.append({"id": e["id"], "from": e["from"], "to": e["to"], "n": k + 1, "pts": pts,
                        "dashed": clean(e.get("kind")).lower() in DASHED_KINDS, "label": label,
-                       "text": clean(e.get("label")), "flipped": k in flipped,
+                       "text": clean(e.get("label")), "detail": detail, "color": color,
+                       "blocked": blocked, "encrypted": encrypted, "flipped": k in flipped,
                        "exit": port[("in" if k in flipped else "out", k)],
                        "entry": port[("out" if k in flipped else "in", k)]})
 
@@ -234,7 +337,12 @@ def build_scene(comps, conns):
         for prev, cur in zip(labels, labels[1:]):
             cur["y"] = max(cur["y"], prev["y"] + (prev["h"] + cur["h"]) / 2 + 4)
 
-    return {"w": width, "h": total_h, "boxes": boxes, "arrows": arrows}
+    return {"w": width, "h": total_h, "boxes": boxes, "arrows": arrows, "zones": zones}
+
+
+def hexagon_points(b):
+    x, y, w, h, i = b["x"], b["y"], b["w"], b["h"], HEX_INSET
+    return [(x + i, y), (x + w - i, y), (x + w, y + h / 2), (x + w - i, y + h), (x + i, y + h), (x, y + h / 2)]
 
 
 def curve_points(p, q, steps=20):
@@ -261,7 +369,7 @@ def arrow_geometry(pts):
 
 def text_rows(box):
     """(text, x, baseline y, size, bold, color) for every line inside a box."""
-    x = box["x"] + (22 if box["shape"] == "pill" else 14)
+    x = box["x"] + {"pill": 22, "hexagon": 26}.get(box["shape"], 14)
     y = box["y"] + (8 if box["shape"] == "cylinder" else 0)
     rows = []
     if len(box["name_lines"]) > 1:
@@ -279,13 +387,16 @@ def text_rows(box):
 
 def render_svg(scene, title):
     W = max(scene["w"], 760)
-    H = HEADER_H + scene["h"] + FOOTER_H
+    H = HEADER_H + scene["h"] + footer_height(scene, W)
     ox = (W - scene["w"]) / 2
     e = html.escape
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.0f}" height="{H:.0f}" viewBox="0 0 {W:.0f} {H:.0f}" font-family="Aptos,Arial,sans-serif">',
          f'<rect width="100%" height="100%" fill="{CANVAS}"/>',
          f'<text x="{MARGIN}" y="38" font-size="22" font-weight="700" fill="{NAVY}">{e(title)}</text>',
          f'<g transform="translate({ox:.1f},{HEADER_H})">']
+    for z in scene["zones"]:
+        s.append(f'<rect x="{z["x"]}" y="{z["y"]}" width="{z["w"]}" height="{z["h"]}" rx="3" fill="{WHITE}" stroke="{ZONE_LINE}" stroke-width="1.5" stroke-dasharray="8 5"/>')
+        s.append(f'<text x="{z["x"] + 12}" y="{z["y"] + 22}" font-size="13" font-weight="700" fill="{GREY}">{e(z["title"])}</text>')
     for a in scene["arrows"]:
         body, head = arrow_geometry(a["pts"])
         d = f'M{body[0][0]:.1f},{body[0][1]:.1f}'
@@ -296,14 +407,16 @@ def render_svg(scene, title):
                 mx = (p[0] + q[0]) / 2
                 d += f' C{mx:.1f},{p[1]:.1f} {mx:.1f},{q[1]:.1f} {q[0]:.1f},{q[1]:.1f}'
         dash = ' stroke-dasharray="7 5"' if a["dashed"] else ''
-        s.append(f'<path d="{d}" fill="none" stroke="{GREY}" stroke-width="2"{dash}/>')
-        s.append('<polygon points="' + ' '.join(f'{x:.1f},{y:.1f}' for x, y in head) + f'" fill="{GREY}"/>')
+        s.append(f'<path d="{d}" fill="none" stroke="{a["color"]}" stroke-width="2"{dash}/>')
+        s.append('<polygon points="' + ' '.join(f'{x:.1f},{y:.1f}' for x, y in head) + f'" fill="{a["color"]}"/>')
     for b in scene["boxes"]:
         x, y, w, h = b["x"], b["y"], b["w"], b["h"]
         if b["shape"] == "cylinder":
             r = 9
             s.append(f'<path d="M{x},{y + r} A{w / 2},{r} 0 0 1 {x + w},{y + r} V{y + h - r} A{w / 2},{r} 0 0 1 {x},{y + h - r} Z" fill="{b["fill"]}" stroke="{b["border"]}" stroke-width="2"/>')
             s.append(f'<path d="M{x},{y + r} A{w / 2},{r} 0 0 0 {x + w},{y + r}" fill="none" stroke="{b["border"]}" stroke-width="2"/>')
+        elif b["shape"] == "hexagon":
+            s.append('<polygon points="' + ' '.join(f'{px:.1f},{py:.1f}' for px, py in hexagon_points(b)) + f'" fill="{b["fill"]}" stroke="{b["border"]}" stroke-width="2" stroke-linejoin="round"/>')
         else:
             rx = 30 if b["shape"] == "pill" else 10
             s.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{b["fill"]}" stroke="{b["border"]}" stroke-width="2"/>')
@@ -313,10 +426,12 @@ def render_svg(scene, title):
     for a in scene["arrows"]:
         l = a["label"]
         s.append(f'<rect x="{l["x"] - l["w"] / 2:.1f}" y="{l["y"] - l["h"] / 2:.1f}" width="{l["w"]:.1f}" height="{l["h"]}" rx="5" fill="{WHITE}" stroke="#C3CDD8" stroke-width="1"/>')
-        for i, line in enumerate(l["lines"]):
-            s.append(f'<text x="{l["x"]:.1f}" y="{l["y"] - l["h"] / 2 + 15 + i * 14:.1f}" font-size="11" text-anchor="middle" fill="{NAVY}">{e(line)}</text>')
+        for i, (line, color) in enumerate(l["lines"]):
+            s.append(f'<text x="{l["x"]:.1f}" y="{l["y"] - l["h"] / 2 + 15 + i * 14:.1f}" font-size="11" text-anchor="middle" fill="{color}">{e(line)}</text>')
     s.append('</g>')
-    s.append(f'<text x="{MARGIN}" y="{H - 13}" font-size="10.5" fill="{GREY}">{e(LEGEND)}</text>')
+    legend = legend_lines(scene, W)
+    for i, line in enumerate(legend):
+        s.append(f'<text x="{MARGIN}" y="{H - 13 - 14 * (len(legend) - 1 - i)}" font-size="10.5" fill="{GREY}">{e(line)}</text>')
     s.append('</svg>')
     return '\n'.join(s)
 
@@ -347,7 +462,7 @@ def render_png(scene, title, path, k=2):
     """Draw the same picture as the SVG with Pillow, so Word can embed it without extra tools."""
     from PIL import Image, ImageDraw
     W = max(scene["w"], 760)
-    H = HEADER_H + scene["h"] + FOOTER_H
+    H = HEADER_H + scene["h"] + footer_height(scene, W)
     ox, oy = (W - scene["w"]) / 2, HEADER_H
     img = Image.new("RGB", (int(W * k), int(H * k)), CANVAS)
     d = ImageDraw.Draw(img)
@@ -359,7 +474,28 @@ def render_png(scene, title, path, k=2):
         xy = P(x, y) if local else (x * k, y * k)
         d.text(xy, text, font=_font(size * k, bold), fill=color, anchor=anchor)
 
+    def dashes(points, color, width, on, off):
+        carry, draw_on = 0.0, True
+        for p, q in zip(points, points[1:]):
+            seg = ((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2) ** 0.5
+            at = 0.0
+            while seg - at > 1e-6:
+                step = min((on if draw_on else off) - carry, seg - at)
+                if draw_on:
+                    a0, a1 = at / seg, (at + step) / seg
+                    d.line([(p[0] + (q[0] - p[0]) * a0, p[1] + (q[1] - p[1]) * a0),
+                            (p[0] + (q[0] - p[0]) * a1, p[1] + (q[1] - p[1]) * a1)], fill=color, width=width)
+                at += step
+                carry += step
+                if carry >= (on if draw_on else off) - 1e-6:
+                    carry, draw_on = 0.0, not draw_on
+
     write(title, MARGIN, 38, 22, True, NAVY, local=False)
+    for z in scene["zones"]:
+        x, y, w, h = z["x"], z["y"], z["w"], z["h"]
+        d.rectangle([P(x, y), P(x + w, y + h)], fill=WHITE)
+        dashes([P(x, y), P(x + w, y), P(x + w, y + h), P(x, y + h), P(x, y)], ZONE_LINE, round(1.5 * k), 8 * k, 5 * k)
+        write(z["title"], x + 12, y + 22, 13, True, GREY)
     for a in scene["arrows"]:
         body, head = arrow_geometry(a["pts"])
         line = []
@@ -367,23 +503,10 @@ def render_png(scene, title, path, k=2):
             line += curve_points(p, q)
         line = [P(*p) for p in line]
         if a["dashed"]:
-            on, off, carry, draw_on = 7 * k, 5 * k, 0.0, True
-            for p, q in zip(line, line[1:]):
-                seg = ((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2) ** 0.5
-                at = 0.0
-                while seg - at > 1e-6:
-                    step = min((on if draw_on else off) - carry, seg - at)
-                    if draw_on:
-                        a0, a1 = at / seg, (at + step) / seg
-                        d.line([(p[0] + (q[0] - p[0]) * a0, p[1] + (q[1] - p[1]) * a0),
-                                (p[0] + (q[0] - p[0]) * a1, p[1] + (q[1] - p[1]) * a1)], fill=GREY, width=2 * k)
-                    at += step
-                    carry += step
-                    if carry >= (on if draw_on else off) - 1e-6:
-                        carry, draw_on = 0.0, not draw_on
+            dashes(line, a["color"], 2 * k, 7 * k, 5 * k)
         else:
-            d.line(line, fill=GREY, width=2 * k, joint="curve")
-        d.polygon([P(*p) for p in head], fill=GREY)
+            d.line(line, fill=a["color"], width=2 * k, joint="curve")
+        d.polygon([P(*p) for p in head], fill=a["color"])
     for b in scene["boxes"]:
         x, y, w, h = b["x"], b["y"], b["w"], b["h"]
         if b["shape"] == "cylinder":
@@ -393,6 +516,8 @@ def render_png(scene, title, path, k=2):
             d.line([P(x, y + r), P(x, y + h - r)], fill=b["border"], width=2 * k)
             d.line([P(x + w - 1, y + r), P(x + w - 1, y + h - r)], fill=b["border"], width=2 * k)
             d.ellipse([P(x, y), P(x + w, y + 2 * r)], fill=b["fill"], outline=b["border"], width=2 * k)
+        elif b["shape"] == "hexagon":
+            d.polygon([P(*p) for p in hexagon_points(b)], fill=b["fill"], outline=b["border"], width=2 * k)
         else:
             d.rounded_rectangle([P(x, y), P(x + w, y + h)], radius=(30 if b["shape"] == "pill" else 10) * k,
                                 fill=b["fill"], outline=b["border"], width=2 * k)
@@ -402,9 +527,11 @@ def render_png(scene, title, path, k=2):
         l = a["label"]
         d.rounded_rectangle([P(l["x"] - l["w"] / 2, l["y"] - l["h"] / 2), P(l["x"] + l["w"] / 2, l["y"] + l["h"] / 2)],
                             radius=5 * k, fill=WHITE, outline="#C3CDD8", width=k)
-        for i, line in enumerate(l["lines"]):
-            write(line, l["x"], l["y"] - l["h"] / 2 + 15 + i * 14, 11, False, NAVY, anchor="ms")
-    write(LEGEND, MARGIN, H - 13, 10.5, False, GREY, local=False)
+        for i, (line, color) in enumerate(l["lines"]):
+            write(line, l["x"], l["y"] - l["h"] / 2 + 15 + i * 14, 11, False, color, anchor="ms")
+    legend = legend_lines(scene, W)
+    for i, line in enumerate(legend):
+        write(line, MARGIN, H - 13 - 14 * (len(legend) - 1 - i), 10.5, False, GREY, local=False)
     img.save(path)
 
 
@@ -461,11 +588,22 @@ def make_pptx(model, views, scenes, path):
         def L(v): return Emu(int(v * 9144 * s))
         def F(pt): return Pt(max(6, round(pt * s, 1)))
 
-        for a in scene["arrows"]:  # arrows first, so boxes sit on top
+        for z in scene["zones"]:  # zone frames at the back
+            frame = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, X(z["x"]), Y(z["y"]), L(z["w"]), L(z["h"]))
+            frame.adjustments[0] = 0.03
+            frame.fill.solid(); frame.fill.fore_color.rgb = rgb(WHITE)
+            frame.line.color.rgb = rgb(ZONE_LINE); frame.line.width = Pt(1.25); frame.line.dash_style = MSO_LINE.DASH
+            tf = frame.text_frame
+            tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
+            tf.margin_left = L(12); tf.margin_top = L(8)
+            p = tf.paragraphs[0]
+            p.text = z["name"]; p.alignment = PP_ALIGN.LEFT
+            p.font.size = F(10); p.font.bold = True; p.font.color.rgb = rgb(GREY)
+        for a in scene["arrows"]:  # arrows next, so boxes sit on top
             pts = a["pts"]
             for i, (p, q) in enumerate(zip(pts, pts[1:])):
                 line = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, X(p[0]), Y(p[1]), X(q[0]), Y(q[1]))
-                line.line.color.rgb = rgb(GREY)
+                line.line.color.rgb = rgb(a["color"])
                 line.line.width = Pt(1.75)
                 if a["dashed"]:
                     line.line.dash_style = MSO_LINE.DASH
@@ -473,10 +611,10 @@ def make_pptx(model, views, scenes, path):
                     ln = line.line._get_or_add_ln()
                     ln.append(ln.makeelement(qn("a:tailEnd"), {"type": "triangle", "w": "med", "len": "med"}))
         for b in scene["boxes"]:
-            kind = MSO_SHAPE.CAN if b["shape"] == "cylinder" else MSO_SHAPE.ROUNDED_RECTANGLE
+            kind = {"cylinder": MSO_SHAPE.CAN, "hexagon": MSO_SHAPE.HEXAGON}.get(b["shape"], MSO_SHAPE.ROUNDED_RECTANGLE)
             shape = slide.shapes.add_shape(kind, X(b["x"]), Y(b["y"]), L(b["w"]), L(b["h"]))
             if b["shape"] != "cylinder":
-                shape.adjustments[0] = 0.5 if b["shape"] == "pill" else 0.09
+                shape.adjustments[0] = {"pill": 0.5, "hexagon": HEX_INSET / BOX_H}.get(b["shape"], 0.09)
             shape.fill.solid(); shape.fill.fore_color.rgb = rgb(b["fill"])
             shape.line.color.rgb = rgb(b["border"]); shape.line.width = Pt(1.5)
             tf = shape.text_frame
@@ -502,7 +640,11 @@ def make_pptx(model, views, scenes, path):
             p = tf.paragraphs[0]
             p.text = f'{a["n"]}. {a["text"]}'; p.alignment = PP_ALIGN.CENTER
             p.font.size = F(8); p.font.color.rgb = rgb(NAVY)
-        textbox(slide, Inches(.45), Inches(6.95), Inches(12.4), Inches(.3), LEGEND, 9, color=GREY)
+            if a["detail"]:
+                p = tf.add_paragraph()
+                p.text = a["detail"]; p.alignment = PP_ALIGN.CENTER
+                p.font.size = F(8); p.font.color.rgb = rgb(a["color"])
+        textbox(slide, Inches(.45), Inches(6.9), Inches(12.4), Inches(.3), "   |   ".join(legend_parts(scene)), 9, color=GREY)
 
     notes = [("What was assumed", model.get("assumptions") or []), ("What is still unknown", model.get("open_questions") or [])]
     if any(items for _, items in notes):
@@ -534,32 +676,45 @@ def make_drawio(model, views, scenes, path):
         SubElement(root, "mxCell", {"id": "1", "parent": "0"})
         oy = 50
 
-        def text_cell(cid, value, x, y, w, h, style):
-            cell = SubElement(root, "mxCell", {"id": cid, "value": value, "style": style, "vertex": "1", "parent": "1"})
+        def text_cell(cid, value, x, y, w, h, style, parent="1"):
+            cell = SubElement(root, "mxCell", {"id": cid, "value": value, "style": style, "vertex": "1", "parent": parent})
             SubElement(cell, "mxGeometry", {"x": str(int(x)), "y": str(int(y)), "width": str(int(w)), "height": str(int(h)), "as": "geometry"})
 
         text_cell("title", html.escape(clean(view.get("title", ""))), MARGIN, 4, max(W - 2 * MARGIN, 600), 36,
                   f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor={NAVY};")
+        frames = {}
+        for n, z in enumerate(scene["zones"]):  # a zone is a container: moving it moves its parts
+            frames[z["id"]] = (f"z_{n}", z["x"], z["y"] + oy)
+            text_cell(f"z_{n}", html.escape(z["name"]), z["x"], z["y"] + oy, z["w"], z["h"],
+                      f"rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor={WHITE};"
+                      f"strokeColor={ZONE_LINE};strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;"
+                      f"fontSize=13;fontStyle=1;fontColor={GREY};")
         for b in scene["boxes"]:
+            parent, px, py = frames.get(b["zone"], ("1", 0, 0))
             value = f'<b>{html.escape(b["name"] + b["tag"])}</b><br><font style="font-size:10px" color="{GREY}">{html.escape(b["type_line"].split(" · ")[0])}</font>'
             if b["desc"]:
                 value += f'<br><font style="font-size:11px" color="{TEXT}">{html.escape(b["desc"])}</font>'
-            look = {"cylinder": "shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;", "pill": "rounded=1;arcSize=50;"}.get(b["shape"], "rounded=1;arcSize=12;")
-            text_cell("n_" + b["id"], value, b["x"], b["y"] + oy, b["w"], b["h"],
-                      look + f'whiteSpace=wrap;html=1;fillColor={b["fill"]};strokeColor={b["border"]};strokeWidth=2;fontColor={NAVY};fontSize=14;align=center;verticalAlign=middle;spacing=6;')
+            look = {"cylinder": "shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;", "pill": "rounded=1;arcSize=50;",
+                    "hexagon": f"shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size={HEX_INSET};"}.get(b["shape"], "rounded=1;arcSize=12;")
+            text_cell("n_" + b["id"], value, b["x"] - px, b["y"] + oy - py, b["w"], b["h"],
+                      look + f'whiteSpace=wrap;html=1;fillColor={b["fill"]};strokeColor={b["border"]};strokeWidth=2;fontColor={NAVY};fontSize=14;align=center;verticalAlign=middle;spacing=6;',
+                      parent)
         for a in scene["arrows"]:
             side = (0, 1) if a["flipped"] else (1, 0)
-            style = (f'html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor={GREY};strokeWidth=2;fontSize=11;fontColor={NAVY};'
+            style = (f'html=1;rounded=1;curved=1;endArrow=block;endFill=1;strokeColor={a["color"]};strokeWidth=2;fontSize=11;fontColor={NAVY};'
                      f'labelBackgroundColor={WHITE};exitX={side[0]};exitY={a["exit"]:.2f};exitDx=0;exitDy=0;'
                      f'entryX={side[1]};entryY={a["entry"]:.2f};entryDx=0;entryDy=0;' + ("dashed=1;dashPattern=6 4;" if a["dashed"] else ""))
-            edge = SubElement(root, "mxCell", {"id": "e_" + a["id"], "value": html.escape(f'{a["n"]}. {a["text"]}'), "style": style,
+            value = html.escape(f'{a["n"]}. {a["text"]}')
+            if a["detail"]:
+                value += f'<br><font color="{a["color"]}">{html.escape(a["detail"])}</font>'
+            edge = SubElement(root, "mxCell", {"id": "e_" + a["id"], "value": value, "style": style,
                                                "edge": "1", "parent": "1", "source": "n_" + a["from"], "target": "n_" + a["to"]})
             geo = SubElement(edge, "mxGeometry", {"relative": "1", "as": "geometry"})
             if len(a["pts"]) > 2:
                 arr = SubElement(geo, "Array", {"as": "points"})
                 for x, y in a["pts"][1:-1]:
                     SubElement(arr, "mxPoint", {"x": str(int(x)), "y": str(int(y + oy))})
-        text_cell("legend", html.escape(LEGEND), MARGIN, scene["h"] + oy + 10, max(W - 2 * MARGIN, 900), 24,
+        text_cell("legend", html.escape("   |   ".join(legend_parts(scene))), MARGIN, scene["h"] + oy + 10, max(W - 2 * MARGIN, 900), 24,
                   f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor={GREY};")
     path.write_bytes(minidom.parseString(tostring(mx, encoding="utf-8")).toprettyxml(indent="  ", encoding="utf-8"))
 
@@ -613,16 +768,40 @@ def make_docx(model, views, scenes, pngs, path):
         else:
             doc.add_paragraph("Picture not available. See the PowerPoint or Draw.io file for this diagram.")
         for a in scene["arrows"]:
-            doc.add_paragraph(f'{a["n"]}. {name_of(a["from"])} → {name_of(a["to"])}: {a["text"]}')
+            doc.add_paragraph(f'{a["n"]}. {name_of(a["from"])} → {name_of(a["to"])}: {a["text"]}' + (f' ({a["detail"]})' if a["detail"] else ""))
 
+    zone_names = {}
+    for z in model.get("zones") or []:
+        for key in (z.get("id"), z.get("name")):
+            if key:
+                zone_names[clean(key).lower()] = clean(z.get("name") or z.get("id"))
+
+    def zone_name(c):
+        raw = clean(c.get("boundary"))
+        return zone_names.get(raw.lower(), raw)
+
+    def link_details(e):
+        return ", ".join(x for x in (" ".join(clean(e.get(f)) for f in ("protocol", "port") if e.get(f)),
+                                     "encrypted" if e.get("encrypted") else "", "BLOCKED" if e.get("blocked") else "") if x)
+
+    used_zones = []
+    for c in model.get("components", []):
+        if zone_name(c) and zone_name(c) not in used_zones:
+            used_zones.append(zone_name(c))
+    if used_zones:
+        about = {clean(z.get("name") or z.get("id")): clean(z.get("description")) for z in model.get("zones") or []}
+        doc.add_heading("Zones", 1)
+        table(["Zone", "What it is", "Parts inside"],
+              [[z, about.get(z, ""), ", ".join(clean(c.get("name")) for c in model.get("components", []) if zone_name(c) == z)]
+               for z in used_zones])
     doc.add_heading("Parts of the system", 1)
-    table(["Part", "Type", "What it does", "Source", "Notes"],
-          [[clean(c.get("name")), type_label(c), clean(c.get("description")), status_of(c).title(),
+    table(["Part", "Type", "Zone", "What it does", "Source", "Notes"],
+          [[clean(c.get("name")), type_label(c), zone_name(c), clean(c.get("description")), status_of(c).title(),
             clean(c.get("notes") or c.get("evidence"))] for c in model.get("components", [])])
     doc.add_heading("How the parts are linked", 1)
-    table(["From", "To", "What happens", "Kind", "Source"],
+    table(["From", "To", "What happens", "Kind", "Details", "Source"],
           [[name_of(e.get("from")), name_of(e.get("to")), clean(e.get("label")), clean(e.get("kind", "interaction")).replace("_", " "),
-            status_of(e).title()] for e in model.get("connections", [])])
+            link_details(e), status_of(e).title()] for e in model.get("connections", [])])
     for title, key in (("Assumptions", "assumptions"), ("Open questions", "open_questions")):
         doc.add_heading(title, 1)
         for x in model.get(key) or ["None recorded."]:
@@ -650,7 +829,7 @@ def main():
     pics = out / "diagrams"
     pics.mkdir(parents=True, exist_ok=True)
     views = load_views(model)
-    scenes = [build_scene(comps, conns) for _, comps, conns in views]
+    scenes = [build_scene(comps, conns, model.get("zones"), view.get("show_zones", True)) for view, comps, conns in views]
     made, skipped = [], []
 
     json_out = out / "architecture.json"

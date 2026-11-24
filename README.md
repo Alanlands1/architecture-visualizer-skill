@@ -2,11 +2,16 @@
 
 A project-level GitLab Duo Agent Skill. Describe a system in plain English ("shoppers use the website, it talks to our backend, the backend saves orders and asks Stripe to take payment") and it draws the architecture diagrams for you. Written documents (PDF, DOCX, PPTX, Markdown, text) work too.
 
+It also draws security and network architecture: zones such as Internet, DMZ, and internal networks, firewalls and other controls, and links marked as encrypted or blocked. `SKILL.md` holds the main instructions and `SECURITY-ARCHITECTURE.md` holds the security ones.
+
 Everything is generated from one shared JSON model, so all the files below always show the same picture.
 
-## Example
+## Examples
 
-`examples/online-bookstore/` holds a complete run: the plain-English input in `description.md`, and every generated file in `output/`. Start with the pictures in `output/diagrams/`.
+Each example folder holds a complete run: the plain-English input in `description.md`, and every generated file in `output/`. Start with the pictures in `output/diagrams/`.
+
+- `examples/online-bookstore/`: an ordinary application, 23 parts across five diagrams.
+- `examples/secure-patient-portal/`: a security setup with five zones, firewalls, a VPN, sign-in, secrets, and logging, across four diagrams.
 
 ## Outputs
 
@@ -16,7 +21,7 @@ Everything is generated from one shared JSON model, so all the files below alway
 - **PNG and SVG**: one picture per diagram in `diagrams/`.
 - **JSON**: the architecture model used by every renderer.
 
-Diagrams are laid out automatically, left to right along the arrows. Databases are drawn as cylinders and people as rounded pills. Each arrow carries its step number and label; dashed arrows are messages, events, files, or scheduled jobs. An amber border marks a part that was inferred, not stated.
+Diagrams are laid out automatically, left to right along the arrows. Databases are drawn as cylinders and people as rounded pills. Each arrow carries its step number and label; dashed arrows are messages, events, files, or scheduled jobs. An amber border marks a part that was inferred, not stated. In security diagrams, zones are dashed frames, firewalls are hexagons, teal arrows are encrypted, and red arrows are blocked.
 
 ## Install in a repository
 

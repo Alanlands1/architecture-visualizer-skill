@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1864" height="360" viewBox="0 0 1864 360" font-family="Aptos,Arial,sans-serif">
+<rect width="100%" height="100%" fill="#F7F9FB"/>
+<text x="28" y="38" font-size="22" font-weight="700" fill="#183153">Zones and patient traffic: from the internet to the data</text>
+<g transform="translate(0.0,58)">
+<rect x="14" y="8" width="252" height="252" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="26" y="30" font-size="13" font-weight="700" fill="#526579">Internet</text>
+<rect x="410" y="8" width="648" height="252" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="422" y="30" font-size="13" font-weight="700" fill="#526579">DMZ</text>
+<rect x="1202" y="8" width="252" height="252" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="1214" y="30" font-size="13" font-weight="700" fill="#526579">App zone</text>
+<rect x="1598" y="8" width="252" height="252" rx="3" fill="#FFFFFF" stroke="#8FA3B8" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="1610" y="30" font-size="13" font-weight="700" fill="#526579">Data zone</text>
+<path d="M252.0,151.0 L415.0,151.0" fill="none" stroke="#198282" stroke-width="2"/>
+<polygon points="424.0,151.0 412.0,145.5 412.0,156.5" fill="#198282"/>
+<path d="M648.0,151.0 L811.0,151.0" fill="none" stroke="#526579" stroke-width="2"/>
+<polygon points="820.0,151.0 808.0,145.5 808.0,156.5" fill="#526579"/>
+<path d="M1035.0,118.0 C1121.0,118.0 1121.0,121.0 1207.0,121.0" fill="none" stroke="#198282" stroke-width="2"/>
+<polygon points="1216.0,121.0 1204.0,115.5 1204.0,126.5" fill="#198282"/>
+<path d="M1440.0,121.0 C1521.5,121.0 1521.5,118.0 1603.0,118.0" fill="none" stroke="#198282" stroke-width="2"/>
+<polygon points="1612.0,118.0 1600.0,112.5 1600.0,123.5" fill="#198282"/>
+<path d="M1035.0,184.0 C1125.5,184.0 1125.5,227.0 1216.0,227.0 L1440.0,227.0 C1521.5,227.0 1521.5,184.0 1603.0,184.0" fill="none" stroke="#AA4141" stroke-width="2"/>
+<polygon points="1612.0,184.0 1600.0,178.5 1600.0,189.5" fill="#AA4141"/>
+<rect x="28" y="92.0" width="224" height="118" rx="30" fill="#F2F4F7" stroke="#3069A4" stroke-width="2"/>
+<text x="50.0" y="119.0" font-size="15" font-weight="700" fill="#183153">Patients</text>
+<text x="50.0" y="138.0" font-size="11" fill="#526579">Actor</text>
+<text x="50.0" y="157.0" font-size="11" fill="#34495E">Use the Patient Portal in their</text>
+<text x="50.0" y="171.0" font-size="11" fill="#34495E">browser</text>
+<polygon points="440.0,92.0 632.0,92.0 648.0,151.0 632.0,210.0 440.0,210.0 424.0,151.0" fill="#FBE9E0" stroke="#3069A4" stroke-width="2" stroke-linejoin="round"/>
+<text x="450.0" y="119.0" font-size="15" font-weight="700" fill="#183153">Edge Firewall</text>
+<text x="450.0" y="138.0" font-size="11" fill="#526579">Firewall</text>
+<text x="450.0" y="157.0" font-size="11" fill="#34495E">Only allows HTTPS on port</text>
+<text x="450.0" y="171.0" font-size="11" fill="#34495E">443 and drops the rest</text>
+<polygon points="836.0,92.0 1028.0,92.0 1044.0,151.0 1028.0,210.0 836.0,210.0 820.0,151.0" fill="#FBE9E0" stroke="#3069A4" stroke-width="2" stroke-linejoin="round"/>
+<text x="846.0" y="119.0" font-size="15" font-weight="700" fill="#183153">WAF</text>
+<text x="846.0" y="138.0" font-size="11" fill="#526579">WAF</text>
+<text x="846.0" y="157.0" font-size="11" fill="#34495E">Blocks common web attacks</text>
+<rect x="1216" y="62.0" width="224" height="118" rx="10" fill="#E8F1FB" stroke="#3069A4" stroke-width="2"/>
+<text x="1230.0" y="89.0" font-size="15" font-weight="700" fill="#183153">Portal App</text>
+<text x="1230.0" y="108.0" font-size="11" fill="#526579">Application</text>
+<text x="1230.0" y="127.0" font-size="11" fill="#34495E">The Patient Portal application.</text>
+<text x="1230.0" y="141.0" font-size="11" fill="#34495E">Stores no passwords.</text>
+<path d="M1612,101.0 A112.0,9 0 0 1 1836,101.0 V201.0 A112.0,9 0 0 1 1612,201.0 Z" fill="#FFF3DF" stroke="#3069A4" stroke-width="2"/>
+<path d="M1612,101.0 A112.0,9 0 0 0 1836,101.0" fill="none" stroke="#3069A4" stroke-width="2"/>
+<text x="1626.0" y="127.0" font-size="15" font-weight="700" fill="#183153">Patient Database</text>
+<text x="1626.0" y="146.0" font-size="11" fill="#526579">Database</text>
+<text x="1626.0" y="165.0" font-size="11" fill="#34495E">Patient records, encrypted on</text>
+<text x="1626.0" y="179.0" font-size="11" fill="#34495E">disk</text>
+<rect x="280.9" y="126.0" width="114.3" height="50" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="338.0" y="141.0" font-size="11" text-anchor="middle" fill="#183153">1. Portal traffic</text>
+<text x="338.0" y="155.0" font-size="11" text-anchor="middle" fill="#198282">HTTPS 443 ·</text>
+<text x="338.0" y="169.0" font-size="11" text-anchor="middle" fill="#198282">encrypted</text>
+<rect x="673.9" y="140.0" width="120.2" height="22" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="734.0" y="155.0" font-size="11" text-anchor="middle" fill="#183153">2. Allowed traffic</text>
+<rect x="1085.0" y="102.0" width="114.3" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1142.1" y="117.0" font-size="11" text-anchor="middle" fill="#183153">3. Clean requests</text>
+<text x="1142.1" y="131.0" font-size="11" text-anchor="middle" fill="#198282">HTTPS · encrypted</text>
+<rect x="1450.1" y="95.0" width="120.2" height="50" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1510.2" y="110.0" font-size="11" text-anchor="middle" fill="#183153">4. Patient records</text>
+<text x="1510.2" y="124.0" font-size="11" text-anchor="middle" fill="#198282">TLS 5432 ·</text>
+<text x="1510.2" y="138.0" font-size="11" text-anchor="middle" fill="#198282">encrypted</text>
+<rect x="1471.8" y="187.5" width="108.4" height="36" rx="5" fill="#FFFFFF" stroke="#C3CDD8" stroke-width="1"/>
+<text x="1526.0" y="202.5" font-size="11" text-anchor="middle" fill="#183153">5. Direct access</text>
+<text x="1526.0" y="216.5" font-size="11" text-anchor="middle" fill="#AA4141">BLOCKED</text>
+</g>
+<text x="28" y="347" font-size="10.5" fill="#526579">Border: blue = stated, amber = inferred, red = unknown   |   Solid arrow = direct request or data access   |   Dashed arrow = message, event, file or scheduled job   |   Teal arrow = encrypted   |   Red arrow = blocked   |   Dashed frame = zone</text>
+</svg>

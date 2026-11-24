@@ -36,6 +36,19 @@ def validate(data):
         status = e.get("evidence_status", "unknown")
         if status not in STATUSES: errors.append(f"Connection {e.get('id')}: invalid evidence_status {status}")
         if status != "confirmed": warnings.append(f"Connection {e.get('id')} is {status}; label it clearly in diagrams.")
+    zones = data.get("zones") or []
+    zone_keys = set()
+    for i, z in enumerate(zones):
+        if not isinstance(z, dict) or not z.get("id") or not z.get("name"): errors.append(f"zones[{i}] needs an id and a name"); continue
+        zone_keys |= {str(z["id"]).strip().lower(), str(z["name"]).strip().lower()}
+    if zones:
+        for c in components:
+            if isinstance(c, dict) and c.get("boundary") and str(c["boundary"]).strip().lower() not in zone_keys:
+                warnings.append(f"Component {c.get('id')}: boundary '{c['boundary']}' is not in the zones list.")
+    for e in connections:
+        if isinstance(e, dict):
+            for flag in ("encrypted", "blocked"):
+                if flag in e and not isinstance(e[flag], bool): errors.append(f"Connection {e.get('id')}: {flag} must be true or false")
     # Text that will not fit the diagram.
     for c in components:
         if isinstance(c, dict):

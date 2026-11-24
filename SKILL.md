@@ -1,6 +1,6 @@
 ---
 name: architecture-visualizer
-description: Turn a plain-English description of a system ("users open a web app, it calls an API, the API saves orders in a database") into a clean architecture diagram and editable PowerPoint, Draw.io, Word, SVG, and JSON deliverables. Also accepts written architecture documents (PDF, DOCX, PPTX, Markdown, text). Use when a user describes, pastes, or attaches how a system works and wants it drawn, documented, or updated.
+description: Turn a plain-English description of a system ("users open a web app, it calls an API, the API saves orders in a database") into a clean architecture diagram and editable PowerPoint, Draw.io, Word, SVG, and JSON deliverables. Also draws security and network architecture with zones, firewalls, and encrypted or blocked links, and accepts written architecture documents (PDF, DOCX, PPTX, Markdown, text). Use when a user describes, pastes, or attaches how a system works and wants it drawn, documented, or updated.
 metadata:
   slash-command: enabled
 ---
@@ -19,6 +19,10 @@ Either of these is a complete, valid input:
 2. **A written document**: PDF, DOCX, PPTX, Markdown, or TXT. Extract its text with `python scripts/extract_text.py <file> --out extracted.txt`, then treat the text exactly like a typed description. If a scanned PDF extracts as empty, ask for a text version; an empty extraction is not an empty architecture.
 
 If the user invokes the skill with nothing to describe, ask one question: "Describe your system in a few sentences: who uses it, what the main parts are, and what talks to what." Never draw a made-up architecture.
+
+## Security and network descriptions
+
+When the description is about security or networking (firewalls, network areas such as a DMZ, who may reach what, sign-in, secrets, admin access, logging), read `SECURITY-ARCHITECTURE.md` before Step 1. It adds zones, security part types, and encrypted and blocked links, along with the rules for what must never be invented. Everything in this file still applies.
 
 ## The workflow
 
@@ -145,7 +149,9 @@ For a small system, one diagram is enough. For a larger one, add more entries to
 
 Every connection listed in a diagram needs both of its endpoints in that diagram's `component_ids`. A connection whose other end is outside the view is not drawn, and the validator warns about it.
 
-Shapes come from `type`: a `database` is drawn as a cylinder, an `actor` as a rounded pill, everything else as a box. The `boundary` field ("screens", "backend", "data") is stored in the model for readers of the JSON, but the generator does not draw boundary boxes.
+Shapes come from `type`: a `database` is drawn as a cylinder, an `actor` as a rounded pill, everything else as a box.
+
+The `boundary` field puts a component in a zone, which is drawn as a dashed frame around its parts. Set it only when the user describes network areas or trust zones, and follow `SECURITY-ARCHITECTURE.md` when you do. For ordinary systems, leave `boundary` out.
 
 ## Step 4: Validate
 
