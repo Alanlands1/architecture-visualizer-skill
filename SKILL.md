@@ -24,6 +24,13 @@ If the user invokes the skill with nothing to describe, ask one question: "Descr
 
 When the description is about security or networking (firewalls, network areas such as a DMZ, who may reach what, sign-in, secrets, admin access, logging), read `SECURITY-ARCHITECTURE.md` before Step 1. It adds zones, security part types, and encrypted and blocked links, along with the rules for what must never be invented. Everything in this file still applies.
 
+## Groups inside groups, and side panels
+
+Two model features are explained fully in `SECURITY-ARCHITECTURE.md` and work for any diagram:
+
+- **Zones inside zones.** When the user says one area is inside another ("the cloud account has a public subnet and a private subnet"), give the inner zone a `parent` in the `zones` list. The outer zone is drawn as a frame around the inner ones.
+- **Side panels.** When the user lists facts that apply to the whole system and are not parts or links ("everything is backed up nightly", "all traffic uses TLS"), put them in the top-level `panels` list, each with an `id`, a `title`, and short `items`. A view draws a panel as a titled card on the right when its `panel_ids` lists it. Every item must come from what the user said.
+
 ## The workflow
 
 Follow these steps in order. The steps after this section explain each one.
@@ -174,6 +181,7 @@ Use `docs/architecture/` as the output folder inside a repository, otherwise `ar
 | --- | --- |
 | `architecture.pptx` | The main deliverable. A title slide, one slide per diagram, and a closing slide listing assumptions and open questions. Every box, arrow, and label is a real PowerPoint shape the user can move and edit. |
 | `architecture.drawio` | The same diagrams for diagrams.net, one page per diagram. Arrows stay attached to their boxes when moved. |
+| `architecture.vsdx` | The same diagrams for Visio, one page per diagram. Shapes are editable; arrows are plain lines that do not follow a moved box. |
 | `architecture.docx` | A written document: summary, every diagram as a picture with its numbered steps listed underneath, a table of parts, a table of links, assumptions, and open questions. |
 | `diagrams/NN-<id>.png` and `.svg` | One picture per diagram, for viewing, chat, or a wiki. |
 | `architecture.svg` | A copy of the first diagram. |
@@ -269,7 +277,7 @@ After each change: validate, regenerate into the same folder, and reply with onl
 
 > **What I drew:** Customers order in the mobile app, which sends the order to your backend. The backend saves it, asks Stripe to take the payment, and then notifies the kitchen tablet.
 >
-> **Files:** `architecture-output/architecture.pptx` (editable slides), plus `.drawio`, `.docx`, and `.json` in the same folder, and a picture of each diagram in `architecture-output/diagrams/`.
+> **Files:** `architecture-output/architecture.pptx` (editable slides), plus `.drawio`, `.vsdx`, `.docx`, and `.json` in the same folder, and a picture of each diagram in `architecture-output/diagrams/`.
 >
 > **What I assumed:** The backend keeps orders in a database. You said it saves the order but not where, so that box is marked as inferred.
 >

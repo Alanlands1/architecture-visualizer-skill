@@ -41,6 +41,25 @@ def validate(data):
     for i, z in enumerate(zones):
         if not isinstance(z, dict) or not z.get("id") or not z.get("name"): errors.append(f"zones[{i}] needs an id and a name"); continue
         zone_keys |= {str(z["id"]).strip().lower(), str(z["name"]).strip().lower()}
+    up = {}
+    for z in zones:
+        if isinstance(z, dict) and z.get("parent"):
+            me, parent = str(z.get("id", "")).strip().lower(), str(z["parent"]).strip().lower()
+            if parent not in zone_keys: errors.append(f"Zone {z.get('id')}: parent '{z['parent']}' is not in the zones list."); continue
+            up[me] = parent
+    for me in up:
+        seen, at = set(), me
+        while at in up and at not in seen: seen.add(at); at = up[at]
+        if at in seen: errors.append(f"Zone {me} sits inside itself; check the parent fields."); break
+    panels = data.get("panels") or []
+    panel_ids = set()
+    for i, p in enumerate(panels):
+        if not isinstance(p, dict) or not p.get("id") or not p.get("title"): errors.append(f"panels[{i}] needs an id and a title"); continue
+        if not isinstance(p.get("items", []), list): errors.append(f"Panel {p['id']}: items must be a list of short sentences"); continue
+        panel_ids.add(p["id"])
+        if len(p.get("items", [])) > 6: warnings.append(f"Panel {p['id']} has more than 6 points; it will be tall, consider trimming it.")
+        for item in p.get("items", []):
+            if len(str(item)) > 110: warnings.append(f"Panel {p['id']}: a point is over 110 characters and will be cut short.")
     if zones:
         for c in components:
             if isinstance(c, dict) and c.get("boundary") and str(c["boundary"]).strip().lower() not in zone_keys:
@@ -67,7 +86,12 @@ def validate(data):
             e = by_conn[eid]
             if e.get("from") not in shown or e.get("to") not in shown:
                 warnings.append(f"Diagram {d.get('id')}: connection {eid} will not be drawn because one of its ends is not in this diagram.")
+        for pid in d.get("panel_ids", []) or []:
+            if pid not in panel_ids: errors.append(f"Diagram {d.get('id')} references unknown panel {pid}")
+        if len(d.get("panel_ids", []) or []) > 8: warnings.append(f"Diagram {d.get('id')} shows more than 8 panels; they will crowd out the diagram.")
         if len(shown) > 8: warnings.append(f"Diagram {d.get('id')} has {len(shown)} components; more than 8 gets crowded, consider splitting it.")
+    if panels and data.get("diagrams") and not any(d.get("panel_ids") for d in data["diagrams"]):
+        warnings.append("Panels are defined but no diagram lists them in panel_ids, so none will be drawn.")
     if not data.get("diagrams"): warnings.append("No diagrams declared; generator will create a default overview.")
     return errors, warnings
 

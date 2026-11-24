@@ -17,11 +17,12 @@ Each example folder holds a complete run: the plain-English input in `descriptio
 
 - **PPTX**: one slide per diagram, built from native editable shapes, arrows, and labels (primary output).
 - **Draw.io**: one page per diagram, editable in diagrams.net.
+- **Visio**: `architecture.vsdx`, one page per diagram, with editable shapes. Arrows are plain lines and do not follow a box when it is moved.
 - **DOCX**: a written document with every diagram, its numbered steps, and tables of parts and links.
 - **PNG and SVG**: one picture per diagram in `diagrams/`.
 - **JSON**: the architecture model used by every renderer.
 
-Diagrams are laid out automatically, left to right along the arrows. Databases are drawn as cylinders and people as rounded pills. Each arrow carries its step number and label; dashed arrows are messages, events, files, or scheduled jobs. An amber border marks a part that was inferred, not stated. In security diagrams, zones are dashed frames, firewalls are hexagons, teal arrows are encrypted, and red arrows are blocked.
+Diagrams are laid out automatically, left to right along the arrows. Databases are drawn as cylinders and people as rounded pills. Each arrow carries its step number and label; dashed arrows are messages, events, files, or scheduled jobs. An amber border marks a part that was inferred, not stated. Zones can sit inside other zones, and whole-system facts such as "TLS 1.2 or higher" appear as titled side panels to the right of a diagram. In security diagrams, zones are dashed frames, firewalls are hexagons, teal arrows are encrypted, and red arrows are blocked.
 
 ## Install in a repository
 
@@ -47,7 +48,7 @@ Python 3.10+ recommended.
 python -m pip install -r requirements.txt
 ```
 
-`python-pptx` and `python-docx` create the editable Office deliverables, and `Pillow` draws the PNG pictures that go into the Word document. The Draw.io and SVG generators use the Python standard library. `pypdf` is used by the optional text extraction helper.
+`python-pptx` and `python-docx` create the editable Office deliverables, and `Pillow` draws the PNG pictures that go into the Word document. The Draw.io, Visio and SVG generators use the Python standard library. `pypdf` is used by the optional text extraction helper.
 
 ## Generate from a normalized model
 

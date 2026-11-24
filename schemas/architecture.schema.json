@@ -12,6 +12,7 @@
     "summary": {"type": "string"},
     "scope": {"type": "array", "items": {"type": "string"}},
     "zones": {"type": "array", "items": {"$ref": "#/$defs/zone"}},
+    "panels": {"type": "array", "items": {"$ref": "#/$defs/panel"}},
     "components": {"type": "array", "items": {"$ref": "#/$defs/component"}},
     "connections": {"type": "array", "items": {"$ref": "#/$defs/connection"}},
     "diagrams": {"type": "array", "items": {"$ref": "#/$defs/diagram"}},
@@ -24,7 +25,16 @@
       "properties": {
         "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"},
         "name": {"type": "string", "minLength": 1},
+        "parent": {"type": "string"},
         "description": {"type": "string"}
+      }, "additionalProperties": true
+    },
+    "panel": {
+      "type": "object", "required": ["id", "title"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"},
+        "title": {"type": "string", "minLength": 1},
+        "items": {"type": "array", "items": {"type": "string"}}
       }, "additionalProperties": true
     },
     "component": {
@@ -57,7 +67,8 @@
         "id": {"type": "string"}, "title": {"type": "string"}, "type": {"type": "string"},
         "component_ids": {"type": "array", "items": {"type": "string"}},
         "connection_ids": {"type": "array", "items": {"type": "string"}},
-        "scenario": {"type": "string"}, "show_zones": {"type": "boolean"}
+        "scenario": {"type": "string"}, "show_zones": {"type": "boolean"},
+        "panel_ids": {"type": "array", "items": {"type": "string"}}
       }, "additionalProperties": true
     }
   },

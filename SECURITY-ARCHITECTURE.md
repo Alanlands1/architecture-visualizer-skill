@@ -40,6 +40,24 @@ A zone is a named area of the network or of trust. In the diagram it is a dashed
 - A part the user did not place in any zone gets no `boundary`. It is drawn outside the frames. Do not guess a zone for it; add an open question if the zone matters.
 - A cloud service outside the user's network, such as a sign-in provider, belongs in the Internet zone or in a zone of its own, whichever the user's words support.
 
+### Zones inside zones
+
+Users often describe an area inside a bigger one: "in Azure we have a security VNet and an application VNet", "the data subnet inside the VPC". Model the big area as a zone of its own and give each inner zone a `parent`:
+
+```json
+"zones": [
+  {"id": "onprem", "name": "On-Premise"},
+  {"id": "azure", "name": "Azure"},
+  {"id": "secvnet", "name": "Security VNet", "parent": "azure"},
+  {"id": "appvnet", "name": "Application VNet", "parent": "azure"}
+]
+```
+
+- The outer zone is drawn as a frame around its inner zones. Inner zones of the same parent always sit side by side.
+- Set each component's `boundary` to the innermost zone the user placed it in. A part the user only placed in "Azure" gets `boundary: "azure"` and sits inside the outer frame, outside the inner ones.
+- Nest only when the user said one area is inside another. Two levels read well; three is the limit.
+- A part that connects two zones without belonging to either, such as a private link between on-premise and the cloud, gets no `boundary` and is drawn between the frames.
+
 Do not use zones for ordinary grouping such as "frontend" and "backend" when the user is not describing network areas or trust. Leave `boundary` out in that case. A view can also turn frames off with `"show_zones": false`.
 
 ## Security parts
@@ -91,6 +109,23 @@ Three points about blocked links:
 
 HTTPS, TLS, SSH, and a VPN tunnel are encrypted by definition, so `encrypted: true` is confirmed when the user names one of them. For any other link, do not assume either way.
 
+## Side panels: controls that are not boxes
+
+Security descriptions often list controls that apply to the whole system and have no place in the flow: "all traffic uses TLS 1.2 or higher", "code is scanned with SAST and DAST", "backups are geo-replicated". Do not turn these into boxes with invented arrows. Put them in side panels, which are drawn as titled cards to the right of the diagram.
+
+```json
+"panels": [
+  {"id": "crypto", "title": "Cryptography", "items": ["TLS 1.2 or higher", "Encryption at rest with customer managed keys"]},
+  {"id": "iam", "title": "Identity and Access", "items": ["MFA for all admins", "Access reviews every quarter"]}
+]
+```
+
+- Group the statements under the headings the user used. If they gave none, use the usual security domains: Identity and Access, Network Security, Cryptography, Data Protection, Logging and Monitoring, Application Security, Business Continuity, Threat and Vulnerability, Governance and Risk.
+- Each item is one short statement in the user's words, under 110 characters. Keep to six items or fewer per panel.
+- A view shows a panel only when the view's `panel_ids` lists it. Show the panels that match the view's question: the sign-in view gets Identity and Access, the logging view gets Logging and Monitoring. One overview may show them all, up to eight.
+- Every item must come from the description. A panel is read as a statement of fact, exactly like a box. Never fill a panel with controls the system ought to have, and leave out a heading the user said nothing about.
+- A named tool that takes part in the flow is still a box. A tool that is only mentioned ("scanned by Veracode", "monitored with Wiz") is a panel item.
+
 ## What never goes in the model
 
 `SKILL.md` already forbids secrets. For security descriptions this needs more care, because users often paste real details:
@@ -134,8 +169,11 @@ Zones take horizontal room: every zone gets its own columns, and a chain inside 
 | Privileged access | How admins and support staff reach servers | `sequence` |
 | Logging and alerts | What sends logs where, and who is alerted | `data_flow` |
 | Outside parties | Links to partners, vendors, and cloud services | `container` |
+| Full security view | The main path, the supporting services, and every side panel | `context` |
 
 Leave out any view the description does not support.
+
+Supporting services that the user listed without saying what they connect to (for example "we also use Azure Monitor and Azure Backup") may be drawn as boxes with no arrows inside their zone. Do not invent arrows for them; ask what they connect to as an open question.
 
 Arrows that cross a zone without stopping there are drawn as lanes passing through that zone's frame. That is expected. If a view has many of them, split it.
 

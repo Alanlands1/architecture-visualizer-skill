@@ -14,5 +14,8 @@ Use values such as `synchronous`, `asynchronous`, `event`, `data`, `batch`, `fil
 ## Zones and security links
 A top-level `zones` list names the network or trust areas, least trusted first. A component joins a zone through `boundary`. Connections may carry `protocol`, `port`, `encrypted`, and `blocked`. Set all of these only from what the source states; `SECURITY-ARCHITECTURE.md` has the rules.
 
+## Nested zones and side panels
+A zone with a `parent` is drawn inside that zone. Top-level `panels` (`id`, `title`, `items`) hold whole-system statements that are not components; a diagram shows the panels named in its `panel_ids`. Both follow the same evidence rules as components.
+
 ## Multiple diagrams
 A diagram object selects component and connection IDs. Each connection's endpoints must appear in that diagram. If a connection crosses view boundaries, either include both endpoints or omit it from that view. Keep stable IDs when revising a model so diffs remain useful.

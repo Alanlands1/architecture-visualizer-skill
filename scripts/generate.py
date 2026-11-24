@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate editable PPTX, Draw.io, DOCX, SVG and PNG deliverables from one architecture JSON model.
+"""Generate editable PPTX, Draw.io, Visio, DOCX, SVG and PNG deliverables from one architecture JSON model.
 
 Every diagram view is laid out once (left to right, following the arrows) and the same
 layout is then drawn by each output format, so all files show the same picture.
@@ -34,6 +34,7 @@ BOX_W, BOX_H, GAP_X, GAP_Y, LANE_H, MARGIN = 224, 118, 172, 34, 26, 28
 LABEL_CHARS = 19  # label lines stay narrower than the gap, so the arrow shows on both sides
 HEADER_H = 58
 ZONE_HEAD, ZONE_PAD = 34, 14
+PANEL_W, PANEL_GAP, PANEL_HEAD = 250, 14, 28
 
 
 def clean(s):
@@ -141,7 +142,8 @@ def load_views(model):
     comps = {c["id"]: c for c in model.get("components", [])}
     conns = {e["id"]: e for e in model.get("connections", [])}
     views = model.get("diagrams") or [{"id": "overview", "title": model.get("title", "Architecture Overview"),
-                                       "type": "overview", "component_ids": list(comps), "connection_ids": list(conns)}]
+                                       "type": "overview", "component_ids": list(comps), "connection_ids": list(conns),
+                                       "panel_ids": [p.get("id") for p in model.get("panels") or []]}]
     out = []
     for v in views:
         cids = v.get("component_ids") or list(comps)
@@ -152,7 +154,26 @@ def load_views(model):
 
 # --------------------------------------------------------------------------- layout
 
-def build_scene(comps, conns, zone_defs=None, show_zones=True):
+def layout_panels(panels, x0, min_h):
+    """Stack the side panels in columns to the right of the diagram."""
+    cards = []
+    for p in panels:
+        items = [clean(i) for i in p.get("items") or [] if clean(i)]
+        rows = [(line, i == 0) for item in items for i, line in enumerate(wrap(item, 38, 3))]
+        name = clean(p.get("title") or p.get("id"))
+        cards.append({"name": name, "title": (wrap(name, 30, 1) or [""])[0], "items": items, "rows": rows,
+                      "w": PANEL_W, "h": PANEL_HEAD + 12 + 14 * len(rows) + 4})
+    limit = max([min_h - 16] + [c["h"] for c in cards])
+    x, y = x0, 8
+    for c in cards:
+        if y > 8 and y + c["h"] > 8 + limit:
+            x, y = x + PANEL_W + PANEL_GAP, 8
+        c["x"], c["y"] = x, y
+        y += c["h"] + PANEL_GAP
+    return cards
+
+
+def build_scene(comps, conns, zone_defs=None, show_zones=True, panels=None):
     """Place boxes in columns that follow the arrows, keep each zone together, and route every arrow."""
     ids = [c["id"] for c in comps]
     idset = set(ids)
@@ -165,7 +186,29 @@ def build_scene(comps, conns, zone_defs=None, show_zones=True):
         for key in (z.get("id"), z.get("name")):
             if key:
                 zone_info[clean(key).lower()] = z
-    zone_of = {c["id"]: (clean(c.get("boundary")).lower() or None) if show_zones else None for c in comps}
+
+    def canon(key):  # one spelling per zone, whether the model used its id or its name
+        key = clean(key).lower()
+        z = zone_info.get(key)
+        return (clean(z.get("id") or z.get("name")).lower() if z else key) or None
+
+    parent_of = {}
+    for z in zone_defs or []:
+        me, up = canon(z.get("id") or z.get("name")), canon(z.get("parent"))
+        seen, at = set(), up
+        while at and at not in seen and at != me:
+            seen.add(at)
+            at = parent_of.get(at)
+        if up in zone_info and at != me:
+            parent_of[me] = up
+
+    def path(g):  # the zone and the zones around it, outermost first
+        out = [g]
+        while parent_of.get(out[0]):
+            out.insert(0, parent_of[out[0]])
+        return out
+
+    zone_of = {c["id"]: canon(c.get("boundary")) if show_zones else None for c in comps}
     natural, _ = flow_columns(ids, links)
     groups = []
     for i in ids:
@@ -173,11 +216,24 @@ def build_scene(comps, conns, zone_defs=None, show_zones=True):
             groups.append(zone_of[i])
     members = {g: [i for i in ids if zone_of[i] == g] for g in groups}
     first = {g: n for n, g in enumerate(groups)}
-    groups.sort(key=lambda g: (sum(natural[i] for i in members[g]) / len(members[g]), first[g]))
-    listed = [clean(z.get("id") or z.get("name")).lower() for z in zone_defs or []]
+    linked = {i for pair in links for i in pair}
+
+    def flow_place(g):  # parts with no arrows say nothing about where their zone belongs
+        cols_ = [natural[i] for i in members[g] if i in linked]
+        return sum(cols_) / len(cols_) if cols_ else float("inf")
+
+    groups.sort(key=lambda g: (flow_place(g), first[g]))
+    listed = [canon(z.get("id") or z.get("name")) for z in zone_defs or []]
     slots = [n for n, g in enumerate(groups) if g in listed]  # zones named in the model keep that order
     for n, g in zip(slots, sorted((groups[n] for n in slots), key=listed.index)):
         groups[n] = g
+    at = {g: n for n, g in enumerate(groups)}  # zones inside the same outer zone stay side by side
+
+    def first(z):
+        return min(at[g] for g in groups if g and z in path(g))
+
+    order = {g: tuple(first(a) for a in path(g)) + (at[g],) if g else (at[g],) for g in groups}
+    groups.sort(key=order.get)
 
     # 2. Columns: inside a zone follow the arrows; zones follow each other left to right.
     col, flipped, span, start = {}, set(), {}, 0
@@ -235,13 +291,21 @@ def build_scene(comps, conns, zone_defs=None, show_zones=True):
 
     col_h = [sum(height(n) for n in c) + GAP_Y * (len(c) - 1) for c in cols]
     inner_h = max(col_h + [BOX_H])
-    width = 2 * MARGIN + n_cols * BOX_W + (n_cols - 1) * GAP_X
     named = [g for g in groups if g]
-    top = MARGIN + (ZONE_HEAD if named else 0)
-    total_h = top + inner_h + MARGIN
+    tree = []  # every zone that gets a frame, outer zones before the zones inside them
+    for g in named:
+        for a in path(g):
+            if a not in tree:
+                tree.append(a)
+    tree.sort(key=lambda z: len(path(z)))
+    levels = max((len(path(z)) for z in tree), default=0)
+    left = MARGIN + ZONE_PAD * max(0, levels - 1)
+    width = 2 * left + n_cols * BOX_W + (n_cols - 1) * GAP_X
+    top = MARGIN + ZONE_HEAD * levels
+    total_h = top + inner_h + MARGIN + ZONE_PAD * max(0, levels - 1)
     pos = {}
     for c, col_members in enumerate(cols):
-        x = MARGIN + c * (BOX_W + GAP_X)
+        x = left + c * (BOX_W + GAP_X)
         y = top + (inner_h - col_h[c]) / 2
         for n in col_members:
             pos[n] = (x, y, height(n))
@@ -263,17 +327,31 @@ def build_scene(comps, conns, zone_defs=None, show_zones=True):
                 frac = 0.5 if len(ks) == 1 else 0.22 + 0.56 * j / (len(ks) - 1)
                 port[(side, k)] = frac
 
+    def x_range(z):  # a frame wraps its own parts and the frames inside it
+        lo, hi = [], []
+        if z in span:
+            lo.append(left + span[z][0] * (BOX_W + GAP_X) - ZONE_PAD)
+            hi.append(left + span[z][1] * (BOX_W + GAP_X) + BOX_W + ZONE_PAD)
+        for k in tree:
+            if parent_of.get(k) == z:
+                a, b = x_range(k)
+                lo.append(a - ZONE_PAD)
+                hi.append(b + ZONE_PAD)
+        return min(lo), max(hi)
+
     zones = []
-    for g in named:
+    for g in tree:
         z = zone_info.get(g, {})
         label = clean(z.get("name")) or next(clean(c.get("boundary")) for c in comps if zone_of[c["id"]] == g)
         if label == label.lower():
             label = label.replace("_", " ").replace("-", " ").title()
-        x0 = MARGIN + span[g][0] * (BOX_W + GAP_X) - ZONE_PAD
-        x1 = MARGIN + span[g][1] * (BOX_W + GAP_X) + BOX_W + ZONE_PAD
+        x0, x1 = x_range(g)
+        depth = len(path(g)) - 1
+        y0 = 8 + depth * ZONE_HEAD
         zones.append({"id": g, "name": label, "title": (wrap(label, (x1 - x0 - 24) / 7.2, 1) or [""])[0],
-                      "description": clean(z.get("description")), "members": members[g],
-                      "x": x0, "y": 8, "w": x1 - x0, "h": total_h - 16})
+                      "description": clean(z.get("description")), "members": members.get(g, []),
+                      "parent": parent_of.get(g), "depth": depth,
+                      "x": x0, "y": y0, "w": x1 - x0, "h": total_h - 8 - depth * ZONE_PAD - y0})
 
     boxes, shape_of = [], {}
     for c in comps:
@@ -337,7 +415,11 @@ def build_scene(comps, conns, zone_defs=None, show_zones=True):
         for prev, cur in zip(labels, labels[1:]):
             cur["y"] = max(cur["y"], prev["y"] + (prev["h"] + cur["h"]) / 2 + 4)
 
-    return {"w": width, "h": total_h, "boxes": boxes, "arrows": arrows, "zones": zones}
+    cards = layout_panels(panels or [], width, total_h)
+    if cards:
+        width = max(c["x"] + c["w"] for c in cards) + MARGIN
+        total_h = max([total_h] + [c["y"] + c["h"] + 8 for c in cards])
+    return {"w": width, "h": total_h, "boxes": boxes, "arrows": arrows, "zones": zones, "panels": cards}
 
 
 def hexagon_points(b):
@@ -428,6 +510,15 @@ def render_svg(scene, title):
         s.append(f'<rect x="{l["x"] - l["w"] / 2:.1f}" y="{l["y"] - l["h"] / 2:.1f}" width="{l["w"]:.1f}" height="{l["h"]}" rx="5" fill="{WHITE}" stroke="#C3CDD8" stroke-width="1"/>')
         for i, (line, color) in enumerate(l["lines"]):
             s.append(f'<text x="{l["x"]:.1f}" y="{l["y"] - l["h"] / 2 + 15 + i * 14:.1f}" font-size="11" text-anchor="middle" fill="{color}">{e(line)}</text>')
+    for c in scene["panels"]:
+        s.append(f'<rect x="{c["x"]}" y="{c["y"]}" width="{c["w"]}" height="{c["h"]}" rx="6" fill="{NAVY}" stroke="{NAVY}" stroke-width="1.5"/>')
+        s.append(f'<rect x="{c["x"] + 1}" y="{c["y"] + PANEL_HEAD}" width="{c["w"] - 2}" height="{c["h"] - PANEL_HEAD - 1}" rx="5" fill="{WHITE}"/>')
+        s.append(f'<text x="{c["x"] + 12}" y="{c["y"] + 19}" font-size="12" font-weight="700" fill="{WHITE}">{e(c["title"])}</text>')
+        for i, (line, lead) in enumerate(c["rows"]):
+            ty = c["y"] + PANEL_HEAD + 19 + i * 14
+            if lead:
+                s.append(f'<text x="{c["x"] + 10}" y="{ty}" font-size="11" fill="{BLUE}">•</text>')
+            s.append(f'<text x="{c["x"] + 22}" y="{ty}" font-size="11" fill="{TEXT}">{e(line)}</text>')
     s.append('</g>')
     legend = legend_lines(scene, W)
     for i, line in enumerate(legend):
@@ -529,6 +620,15 @@ def render_png(scene, title, path, k=2):
                             radius=5 * k, fill=WHITE, outline="#C3CDD8", width=k)
         for i, (line, color) in enumerate(l["lines"]):
             write(line, l["x"], l["y"] - l["h"] / 2 + 15 + i * 14, 11, False, color, anchor="ms")
+    for c in scene["panels"]:
+        d.rounded_rectangle([P(c["x"], c["y"]), P(c["x"] + c["w"], c["y"] + c["h"])], radius=6 * k, fill=NAVY)
+        d.rounded_rectangle([P(c["x"] + 1.5, c["y"] + PANEL_HEAD), P(c["x"] + c["w"] - 1.5, c["y"] + c["h"] - 1.5)], radius=5 * k, fill=WHITE)
+        write(c["title"], c["x"] + 12, c["y"] + 19, 12, True, WHITE)
+        for i, (line, lead) in enumerate(c["rows"]):
+            ty = c["y"] + PANEL_HEAD + 19 + i * 14
+            if lead:
+                write("•", c["x"] + 10, ty, 11, False, BLUE)
+            write(line, c["x"] + 22, ty, 11, False, TEXT)
     legend = legend_lines(scene, W)
     for i, line in enumerate(legend):
         write(line, MARGIN, H - 13 - 14 * (len(legend) - 1 - i), 10.5, False, GREY, local=False)
@@ -644,6 +744,19 @@ def make_pptx(model, views, scenes, path):
                 p = tf.add_paragraph()
                 p.text = a["detail"]; p.alignment = PP_ALIGN.CENTER
                 p.font.size = F(8); p.font.color.rgb = rgb(a["color"])
+        for c in scene["panels"]:
+            for top, tall, fill, rows in ((c["y"], PANEL_HEAD, NAVY, [(c["name"], 9, True, WHITE)]),
+                                          (c["y"] + PANEL_HEAD, c["h"] - PANEL_HEAD, WHITE, [("•  " + i, 8, False, TEXT) for i in c["items"]])):
+                card = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, X(c["x"]), Y(top), L(c["w"]), L(tall))
+                card.fill.solid(); card.fill.fore_color.rgb = rgb(fill)
+                card.line.color.rgb = rgb(NAVY); card.line.width = Pt(1)
+                tf = card.text_frame
+                tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP if fill == WHITE else MSO_ANCHOR.MIDDLE
+                tf.margin_left = tf.margin_right = L(8); tf.margin_top = tf.margin_bottom = L(4)
+                for i, (text, size, bold, color) in enumerate(rows):
+                    p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+                    p.text = text; p.alignment = PP_ALIGN.LEFT
+                    p.font.size = F(size); p.font.bold = bold; p.font.color.rgb = rgb(color)
         textbox(slide, Inches(.45), Inches(6.9), Inches(12.4), Inches(.3), "   |   ".join(legend_parts(scene)), 9, color=GREY)
 
     notes = [("What was assumed", model.get("assumptions") or []), ("What is still unknown", model.get("open_questions") or [])]
@@ -683,12 +796,13 @@ def make_drawio(model, views, scenes, path):
         text_cell("title", html.escape(clean(view.get("title", ""))), MARGIN, 4, max(W - 2 * MARGIN, 600), 36,
                   f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor={NAVY};")
         frames = {}
-        for n, z in enumerate(scene["zones"]):  # a zone is a container: moving it moves its parts
+        for n, z in enumerate(scene["zones"]):  # a zone is a container: moving it moves what is inside
+            parent, px, py = frames.get(z["parent"], ("1", 0, 0))
             frames[z["id"]] = (f"z_{n}", z["x"], z["y"] + oy)
-            text_cell(f"z_{n}", html.escape(z["name"]), z["x"], z["y"] + oy, z["w"], z["h"],
+            text_cell(f"z_{n}", html.escape(z["name"]), z["x"] - px, z["y"] + oy - py, z["w"], z["h"],
                       f"rounded=1;arcSize=3;container=1;collapsible=0;dashed=1;dashPattern=8 5;html=1;whiteSpace=wrap;fillColor={WHITE};"
                       f"strokeColor={ZONE_LINE};strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=12;spacingTop=4;"
-                      f"fontSize=13;fontStyle=1;fontColor={GREY};")
+                      f"fontSize=13;fontStyle=1;fontColor={GREY};", parent)
         for b in scene["boxes"]:
             parent, px, py = frames.get(b["zone"], ("1", 0, 0))
             value = f'<b>{html.escape(b["name"] + b["tag"])}</b><br><font style="font-size:10px" color="{GREY}">{html.escape(b["type_line"].split(" · ")[0])}</font>'
@@ -714,9 +828,166 @@ def make_drawio(model, views, scenes, path):
                 arr = SubElement(geo, "Array", {"as": "points"})
                 for x, y in a["pts"][1:-1]:
                     SubElement(arr, "mxPoint", {"x": str(int(x)), "y": str(int(y + oy))})
+        for n, c in enumerate(scene["panels"]):
+            text_cell(f"p_{n}", html.escape(c["name"]), c["x"], c["y"] + oy, c["w"], c["h"],
+                      f"swimlane;startSize={PANEL_HEAD};collapsible=0;html=1;whiteSpace=wrap;fillColor={NAVY};swimlaneFillColor={WHITE};"
+                      f"strokeColor={NAVY};fontColor={WHITE};fontSize=12;fontStyle=1;align=left;spacingLeft=8;")
+            text_cell(f"p_{n}_body", "<br>".join("• " + html.escape(i) for i in c["items"]), 0, PANEL_HEAD, c["w"], c["h"] - PANEL_HEAD,
+                      f"text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=6;fontSize=11;fontColor={TEXT};",
+                      f"p_{n}")
         text_cell("legend", html.escape("   |   ".join(legend_parts(scene))), MARGIN, scene["h"] + oy + 10, max(W - 2 * MARGIN, 900), 24,
                   f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor={GREY};")
     path.write_bytes(minidom.parseString(tostring(mx, encoding="utf-8")).toprettyxml(indent="  ", encoding="utf-8"))
+
+
+# --------------------------------------------------------------------------- Visio
+
+VSDX_NS = "http://schemas.microsoft.com/office/visio/2012/main"
+VSDX_REL = "http://schemas.microsoft.com/visio/2010/relationships/"
+
+
+def make_vsdx(model, views, scenes, path):
+    """Write a Visio drawing with one page per view. Needs no extra package: a .vsdx is a zip of XML."""
+    import zipfile
+    esc = html.escape
+    head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+    ns = f'xmlns="{VSDX_NS}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xml:space="preserve"'
+
+    def cell(name, value, formula=None):
+        return f'<Cell N="{name}" V="{value}"' + (f' F="{formula}"' if formula else '') + '/>'
+
+    def page_xml(scene, title):
+        W = max(scene["w"], 760)
+        H = HEADER_H + scene["h"] + footer_height(scene, W)
+        ox = (W - scene["w"]) / 2
+        out, count = [], [0]
+
+        def shape(x, y, w, h, rows, runs, fill=None, line=None, weight=1.5, dashed=False, rounding=0, arrow=False,
+                  align=1, valign=1, pad=6, local=True, extra_geometry=""):
+            """x, y, w, h and row points are in drawing units with y pointing down; Visio wants inches, y up."""
+            count[0] += 1
+            if local:
+                x, y = x + ox, y + HEADER_H
+            wi, hi = max(w, 0.1) / 100, max(h, 0.1) / 100
+            s = [f'<Shape ID="{count[0]}" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">',
+                 cell("PinX", f"{(x + w / 2) / 100:.4f}"), cell("PinY", f"{(H - y - h / 2) / 100:.4f}"),
+                 cell("Width", f"{wi:.4f}"), cell("Height", f"{hi:.4f}"),
+                 cell("LocPinX", f"{wi / 2:.4f}", "Width*0.5"), cell("LocPinY", f"{hi / 2:.4f}", "Height*0.5"),
+                 cell("FillPattern", 1 if fill else 0), cell("FillForegnd", fill or WHITE),
+                 cell("LinePattern", 0 if not line else 2 if dashed else 1), cell("LineColor", line or GREY),
+                 cell("LineWeight", f"{weight / 72:.4f}"), cell("Rounding", f"{rounding / 100:.4f}"),
+                 cell("EndArrow", 4 if arrow else 0), cell("EndArrowSize", 2),
+                 cell("VerticalAlign", valign)]
+            s += [cell(m, f"{pad / 100:.4f}") for m in ("LeftMargin", "RightMargin", "TopMargin", "BottomMargin")]
+            if runs:
+                s.append('<Section N="Character">')
+                for i, (_, size, bold, color) in enumerate(runs):
+                    s.append(f'<Row IX="{i}">' + cell("Font", "Arial") + cell("Color", color) + cell("Style", 1 if bold else 0)
+                             + cell("Size", f"{size / 100:.4f}") + '</Row>')
+                s.append(f'</Section><Section N="Paragraph"><Row IX="0">{cell("HorzAlign", align)}</Row></Section>')
+            if rows:
+                s.append(f'<Section N="Geometry" IX="0">{cell("NoFill", 0 if fill else 1)}{cell("NoLine", 0)}')
+                for i, (kind, px, py, *bow) in enumerate(rows, 1):
+                    lx, ly = (px - (x - ox if local else x)) / 100, (h - (py - (y - HEADER_H if local else y))) / 100
+                    fx = f"Width*{lx / wi:.5f}" if w > 1 else None
+                    fy = f"Height*{ly / hi:.5f}" if h > 1 else None
+                    s.append(f'<Row T="{kind}" IX="{i}">' + cell("X", f"{lx:.4f}", fx) + cell("Y", f"{ly:.4f}", fy)
+                             + (cell("A", f"{bow[0] / 100:.4f}") if bow else '') + '</Row>')
+                s.append('</Section>' + extra_geometry)
+            if runs:
+                s.append('<Text><pp IX="0"/>' + '\n'.join(f'<cp IX="{i}"/>{esc(t, quote=False)}' for i, (t, *_) in enumerate(runs)) + '</Text>')
+            s.append('</Shape>')
+            out.append(''.join(s))
+
+        def rect(x, y, w, h):
+            return [("MoveTo", x, y + h), ("LineTo", x + w, y + h), ("LineTo", x + w, y), ("LineTo", x, y), ("LineTo", x, y + h)]
+
+        shape(MARGIN, 10, W - 2 * MARGIN, 40, None, [(title, 22, True, NAVY)], align=0, local=False)
+        for z in scene["zones"]:
+            shape(z["x"], z["y"], z["w"], z["h"], rect(z["x"], z["y"], z["w"], z["h"]), [(z["name"], 13, True, GREY)],
+                  fill=WHITE, line=ZONE_LINE, dashed=True, rounding=3, align=0, valign=0, pad=10)
+        for a in scene["arrows"]:
+            pts = []
+            for p, q in zip(a["pts"], a["pts"][1:]):
+                pts += curve_points(p, q, 12)[(1 if pts else 0):]
+            xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+            shape(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys),
+                  [("MoveTo" if i == 0 else "LineTo", px, py) for i, (px, py) in enumerate(pts)], None,
+                  line=a["color"], weight=1.75, dashed=a["dashed"], arrow=True)
+        for b in scene["boxes"]:
+            x, y, w, h = b["x"], b["y"], b["w"], b["h"]
+            runs = [(b["name"] + b["tag"], 15, True, NAVY), (b["type_line"].split(" · ")[0], 10, False, BLUE)]
+            if b["desc"]:
+                runs.append((b["desc"], 11, False, TEXT))
+            look = dict(fill=b["fill"], line=b["border"], pad=10)
+            if b["shape"] == "cylinder":
+                r = 9  # the rim is a second, unfilled outline on top of the body
+                rim = (f'<Section N="Geometry" IX="1">{cell("NoFill", 1)}{cell("NoLine", 0)}'
+                       f'<Row T="MoveTo" IX="1">{cell("X", 0)}{cell("Y", f"{(h - r) / 100:.4f}", f"Height-{r / 100}")}</Row>'
+                       f'<Row T="ArcTo" IX="2">{cell("X", f"{w / 100:.4f}", "Width")}{cell("Y", f"{(h - r) / 100:.4f}", f"Height-{r / 100}")}{cell("A", r / 100)}</Row></Section>')
+                shape(x, y, w, h, [("MoveTo", x, y + r), ("LineTo", x, y + h - r), ("ArcTo", x + w, y + h - r, r),
+                                   ("LineTo", x + w, y + r), ("ArcTo", x, y + r, r)], runs, extra_geometry=rim, **look)
+            elif b["shape"] == "hexagon":
+                hexa = hexagon_points(b)
+                shape(x, y, w, h, [("MoveTo" if i == 0 else "LineTo", px, py) for i, (px, py) in enumerate(hexa + hexa[:1])],
+                      runs, **{**look, "pad": 22})
+            else:
+                shape(x, y, w, h, rect(x, y, w, h), runs, rounding=30 if b["shape"] == "pill" else 10, **look)
+        for a in scene["arrows"]:
+            l = a["label"]
+            runs = [(f'{a["n"]}. {a["text"]}', 10, False, NAVY)] + ([(a["detail"], 10, False, a["color"])] if a["detail"] else [])
+            x, y = l["x"] - l["w"] / 2, l["y"] - l["h"] / 2
+            shape(x, y, l["w"], l["h"], rect(x, y, l["w"], l["h"]), runs, fill=WHITE, line="#C3CDD8", weight=.75, rounding=5, pad=3)
+        for c in scene["panels"]:
+            shape(c["x"], c["y"], c["w"], PANEL_HEAD, rect(c["x"], c["y"], c["w"], PANEL_HEAD), [(c["name"], 12, True, WHITE)],
+                  fill=NAVY, line=NAVY, weight=1, align=0, pad=8)
+            shape(c["x"], c["y"] + PANEL_HEAD, c["w"], c["h"] - PANEL_HEAD, rect(c["x"], c["y"] + PANEL_HEAD, c["w"], c["h"] - PANEL_HEAD),
+                  [("•  " + i, 11, False, TEXT) for i in c["items"]] or None, fill=WHITE, line=NAVY, weight=1, align=0, valign=0, pad=8)
+        shape(MARGIN, H - 34, W - 2 * MARGIN, 28, None, [("   |   ".join(legend_parts(scene)), 10, False, GREY)], align=0, local=False)
+        return W / 100, H / 100, f'{head}<PageContents {ns}><Shapes>{"".join(out)}</Shapes></PageContents>'
+
+    pages, names = [], []
+    for i, ((view, _, _), scene) in enumerate(zip(views, scenes), 1):
+        title = clean(view.get("title") or model.get("title") or f"View {i}")
+        name = re.sub(r'[\\/:*?\[\]]', " ", title)[:28].strip() or f"View {i}"
+        if name in names:
+            name = f"{name[:25]} {i}"
+        names.append(name)
+        pages.append((name,) + page_xml(scene, title))
+
+    sheet = ('<StyleSheet ID="0" NameU="No Style" Name="No Style">' + cell("LineWeight", "0.0104") + cell("LineColor", GREY)
+             + cell("LinePattern", 1) + cell("FillForegnd", WHITE) + cell("FillBkgnd", WHITE) + cell("FillPattern", 1)
+             + cell("VerticalAlign", 1) + '<Section N="Character"><Row IX="0">' + cell("Font", "Arial") + cell("Color", NAVY)
+             + cell("Style", 0) + cell("Size", "0.1111") + '</Row></Section><Section N="Paragraph"><Row IX="0">'
+             + cell("HorzAlign", 1) + '</Row></Section></StyleSheet>')
+    parts = {
+        "[Content_Types].xml": head + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/visio/document.xml" ContentType="application/vnd.ms-visio.drawing.main+xml"/>'
+            '<Override PartName="/visio/pages/pages.xml" ContentType="application/vnd.ms-visio.pages+xml"/>'
+            + ''.join(f'<Override PartName="/visio/pages/page{i}.xml" ContentType="application/vnd.ms-visio.page+xml"/>'
+                      for i in range(1, len(pages) + 1)) + '</Types>',
+        "_rels/.rels": head + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            f'<Relationship Id="rId1" Type="{VSDX_REL}document" Target="visio/document.xml"/></Relationships>',
+        "visio/document.xml": f'{head}<VisioDocument {ns}><DocumentSettings TopPage="0" DefaultLineStyle="0" DefaultFillStyle="0" '
+            f'DefaultTextStyle="0" DefaultGuideStyle="0"/><StyleSheets>{sheet}</StyleSheets></VisioDocument>',
+        "visio/_rels/document.xml.rels": head + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            f'<Relationship Id="rId1" Type="{VSDX_REL}pages" Target="pages/pages.xml"/></Relationships>',
+        "visio/pages/pages.xml": f'{head}<Pages {ns}>' + ''.join(
+            f'<Page ID="{i}" NameU="{esc(n)}" Name="{esc(n)}"><PageSheet LineStyle="0" FillStyle="0" TextStyle="0">'
+            + cell("PageWidth", f"{w:.4f}") + cell("PageHeight", f"{h:.4f}") + cell("PageScale", 1) + cell("DrawingScale", 1)
+            + cell("DrawingSizeType", 3) + cell("DrawingScaleType", 0) + f'</PageSheet><Rel r:id="rId{i + 1}"/></Page>'
+            for i, (n, w, h, _) in enumerate(pages)) + '</Pages>',
+        "visio/pages/_rels/pages.xml.rels": head + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            + ''.join(f'<Relationship Id="rId{i}" Type="{VSDX_REL}page" Target="page{i}.xml"/>' for i in range(1, len(pages) + 1))
+            + '</Relationships>',
+    }
+    for i, (_, _, _, xml) in enumerate(pages, 1):
+        parts[f"visio/pages/page{i}.xml"] = xml
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, text in parts.items():
+            z.writestr(name, text)
 
 
 # --------------------------------------------------------------------------- Word
@@ -794,6 +1065,10 @@ def make_docx(model, views, scenes, pngs, path):
         table(["Zone", "What it is", "Parts inside"],
               [[z, about.get(z, ""), ", ".join(clean(c.get("name")) for c in model.get("components", []) if zone_name(c) == z)]
                for z in used_zones])
+    if model.get("panels"):
+        doc.add_heading("Summary panels", 1)
+        table(["Panel", "Points"], [[clean(p.get("title") or p.get("id")), "\n".join("• " + clean(i) for i in p.get("items") or [])]
+                                    for p in model["panels"]])
     doc.add_heading("Parts of the system", 1)
     table(["Part", "Type", "Zone", "What it does", "Source", "Notes"],
           [[clean(c.get("name")), type_label(c), zone_name(c), clean(c.get("description")), status_of(c).title(),
@@ -829,7 +1104,9 @@ def main():
     pics = out / "diagrams"
     pics.mkdir(parents=True, exist_ok=True)
     views = load_views(model)
-    scenes = [build_scene(comps, conns, model.get("zones"), view.get("show_zones", True)) for view, comps, conns in views]
+    scenes = [build_scene(comps, conns, model.get("zones"), view.get("show_zones", True),
+                          [p for p in model.get("panels") or [] if p.get("id") in (view.get("panel_ids") or [])])
+              for view, comps, conns in views]
     made, skipped = [], []
 
     json_out = out / "architecture.json"
@@ -857,6 +1134,7 @@ def main():
 
     for name, build in (("architecture.pptx", lambda p: make_pptx(model, views, scenes, p)),
                         ("architecture.drawio", lambda p: make_drawio(model, views, scenes, p)),
+                        ("architecture.vsdx", lambda p: make_vsdx(model, views, scenes, p)),
                         ("architecture.docx", lambda p: make_docx(model, views, scenes, pngs, p))):
         try:
             build(out / name)
