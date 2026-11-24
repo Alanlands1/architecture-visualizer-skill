@@ -1,0 +1,24 @@
+{
+  "title": "Customer Management Platform",
+  "subtitle": "Illustrative example — replace with facts from the supplied architecture write-up",
+  "version": "1.0",
+  "source_documents": ["example-architecture-brief.md"],
+  "summary": "A sample three-tier application used to demonstrate the output generators.",
+  "scope": ["Customer API", "Customer service", "Customer database"],
+  "components": [
+    {"id": "web", "name": "Web Client", "type": "user_interface", "description": "Customer-facing web application", "boundary": "client", "evidence_status": "confirmed", "evidence": "Example brief: customers use the web client."},
+    {"id": "api", "name": "Customer API", "type": "application", "description": "Exposes customer REST endpoints", "boundary": "platform", "evidence_status": "confirmed", "evidence": "Example brief: REST API receives customer requests."},
+    {"id": "svc", "name": "Customer Service", "type": "service", "description": "Implements customer business rules", "boundary": "platform", "evidence_status": "confirmed", "evidence": "Example brief: service applies customer business rules."},
+    {"id": "db", "name": "Customer Database", "type": "database", "description": "Stores customer records", "boundary": "data", "evidence_status": "confirmed", "evidence": "Example brief: customer records are stored in the database."}
+  ],
+  "connections": [
+    {"id": "e1", "from": "web", "to": "api", "label": "HTTPS / REST", "kind": "synchronous", "evidence_status": "confirmed", "evidence": "Example brief: web client calls the API over HTTPS."},
+    {"id": "e2", "from": "api", "to": "svc", "label": "Internal call", "kind": "synchronous", "evidence_status": "confirmed", "evidence": "Example brief: API delegates to customer service."},
+    {"id": "e3", "from": "svc", "to": "db", "label": "Read / write", "kind": "data", "evidence_status": "confirmed", "evidence": "Example brief: service reads and writes customer records."}
+  ],
+  "diagrams": [
+    {"id": "overview", "title": "Customer Management — Logical Architecture", "type": "container", "component_ids": ["web", "api", "svc", "db"], "connection_ids": ["e1", "e2", "e3"]}
+  ],
+  "assumptions": [],
+  "open_questions": ["Which identity provider authenticates customer users?", "Is the database hosted or managed, and in which environment?"]
+}

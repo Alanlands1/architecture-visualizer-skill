@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/architecture-visualizer/architecture.schema.json",
+  "title": "Architecture Visualizer model",
+  "type": "object",
+  "required": ["title", "components", "connections"],
+  "properties": {
+    "title": {"type": "string", "minLength": 1},
+    "subtitle": {"type": "string"},
+    "version": {"type": "string"},
+    "source_documents": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "string"},
+    "scope": {"type": "array", "items": {"type": "string"}},
+    "components": {"type": "array", "items": {"$ref": "#/$defs/component"}},
+    "connections": {"type": "array", "items": {"$ref": "#/$defs/connection"}},
+    "diagrams": {"type": "array", "items": {"$ref": "#/$defs/diagram"}},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "open_questions": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "component": {
+      "type": "object", "required": ["id", "name", "type"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+$"},
+        "name": {"type": "string", "minLength": 1},
+        "type": {"type": "string"},
+        "description": {"type": "string"},
+        "boundary": {"type": "string"},
+        "evidence_status": {"enum": ["confirmed", "inferred", "unknown"]},
+        "evidence": {"type": "string"},
+        "notes": {"type": "string"}
+      }, "additionalProperties": true
+    },
+    "connection": {
+      "type": "object", "required": ["id", "from", "to", "label"],
+      "properties": {
+        "id": {"type": "string"}, "from": {"type": "string"}, "to": {"type": "string"},
+        "label": {"type": "string"}, "kind": {"type": "string"},
+        "evidence_status": {"enum": ["confirmed", "inferred", "unknown"]},
+        "evidence": {"type": "string"}, "notes": {"type": "string"}
+      }, "additionalProperties": true
+    },
+    "diagram": {
+      "type": "object", "required": ["id", "title", "component_ids", "connection_ids"],
+      "properties": {
+        "id": {"type": "string"}, "title": {"type": "string"}, "type": {"type": "string"},
+        "component_ids": {"type": "array", "items": {"type": "string"}},
+        "connection_ids": {"type": "array", "items": {"type": "string"}},
+        "scenario": {"type": "string"}
+      }, "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
